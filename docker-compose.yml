@@ -43,5 +43,21 @@ services:
     volumes:
       - ./data:/app/data
 
+  processing:
+    build:
+      context: ./services/processing
+    ports:
+      - "8002:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://pulse:pulse_dev@postgres:5432/pulse
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   postgres_data:
