@@ -1,3 +1,5 @@
+"""Processing service entry point."""
+
 import logging
 from contextlib import asynccontextmanager
 
@@ -17,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Create database tables on startup, log on shutdown."""
     logger.info("Creating database tables...")
     Base.metadata.create_all(bind=engine)
     logger.info("Processing service started")
@@ -38,6 +41,7 @@ app.include_router(categories_router, prefix="/api")
 
 @app.get("/health", response_model=HealthResponse, tags=["System"])
 def health_check():
+    """Return service health status."""
     return HealthResponse(
         status="healthy",
         service="processing",

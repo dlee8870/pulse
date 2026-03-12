@@ -1,3 +1,5 @@
+"""Rule-based post classifier for EA FC community feedback categories."""
+
 CATEGORY_RULES = {
     "gameplay-bug": {
         "goalkeeper-logic": [
@@ -156,11 +158,14 @@ FLAIR_CATEGORY_HINTS = {
 
 
 class PostClassifier:
+    """Classifies posts using keyword matching with flair-based overrides."""
+
     def __init__(self):
         self.rules = CATEGORY_RULES
         self.flair_hints = FLAIR_CATEGORY_HINTS
 
     def classify(self, title: str, body: str, flair: str | None = None) -> tuple[str, str | None]:
+        """Return (category, subcategory) for a post based on its text and flair."""
         text = f"{title} {body or ''}".lower()
 
         best_category = None

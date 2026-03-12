@@ -1,3 +1,5 @@
+"""Database table definitions for raw posts and processed results."""
+
 import uuid
 from datetime import datetime, timezone
 
@@ -17,10 +19,13 @@ from app.database import Base
 
 
 def utcnow():
+    """Return the current UTC timestamp."""
     return datetime.now(timezone.utc)
 
 
 class RawPost(Base):
+    """A community post from the ingestion service. Read-only from this service."""
+
     __tablename__ = "raw_posts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -40,6 +45,8 @@ class RawPost(Base):
 
 
 class ProcessedPost(Base):
+    """NLP analysis results for a raw post. Linked 1-to-1 via raw_post_id."""
+
     __tablename__ = "processed_posts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

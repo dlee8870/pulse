@@ -1,3 +1,5 @@
+"""Endpoints for querying and reading raw posts."""
+
 import logging
 from datetime import datetime
 from uuid import UUID
@@ -29,6 +31,7 @@ def list_posts(
     posted_before: datetime | None = None,
     db: Session = Depends(get_db),
 ):
+    """Return a paginated list of raw posts with optional filters."""
     query = db.query(RawPost)
 
     if subreddit:
@@ -69,6 +72,7 @@ def list_posts(
 
 @router.get("/{post_id}", response_model=RawPostResponse)
 def get_post(post_id: UUID, db: Session = Depends(get_db)):
+    """Return a single raw post by ID."""
     post = db.query(RawPost).filter(RawPost.id == post_id).first()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
@@ -77,6 +81,7 @@ def get_post(post_id: UUID, db: Session = Depends(get_db)):
 
 @router.get("/stats/summary")
 def get_posts_summary(db: Session = Depends(get_db)):
+    """Return aggregate stats: totals, processing status, average score, per-subreddit counts."""
     total = db.query(func.count(RawPost.id)).scalar()
     processed = (
         db.query(func.count(RawPost.id))

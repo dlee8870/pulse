@@ -1,3 +1,5 @@
+"""Reddit API client using PRAW."""
+
 import logging
 from datetime import datetime, timezone
 
@@ -7,6 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 class RedditClient:
+    """Fetches posts from Reddit and normalizes them to match our RawPost schema."""
+
     def __init__(self, client_id: str, client_secret: str, user_agent: str):
         self.reddit = praw.Reddit(
             client_id=client_id,
@@ -15,6 +19,7 @@ class RedditClient:
         )
 
     def fetch_posts(self, subreddit: str, sort: str = "hot", limit: int = 100) -> list[dict]:
+        """Pull posts from a subreddit. Skips stickied/pinned posts."""
         logger.info("Fetching %d %s posts from r/%s", limit, sort, subreddit)
         sub = self.reddit.subreddit(subreddit)
 

@@ -1,7 +1,11 @@
+"""Severity scoring that combines sentiment, engagement, category, and comment ratio."""
+
 import math
 
 
 class SeverityScorer:
+    """Produces a 0.0 to 1.0 urgency score from multiple weighted signals."""
+
     def __init__(
         self,
         sentiment_weight: float = 0.30,
@@ -21,6 +25,7 @@ class SeverityScorer:
         comment_count: int,
         category: str,
     ) -> float:
+        """Calculate severity from 0.0 (not urgent) to 1.0 (critical)."""
         if category == "positive":
             return round(max(0.0, 0.05 + abs(sentiment_score) * 0.1), 3)
 

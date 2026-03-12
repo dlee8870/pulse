@@ -1,3 +1,5 @@
+"""Request and response schemas for the ingestion API."""
+
 from datetime import datetime
 from uuid import UUID
 
@@ -5,6 +7,8 @@ from pydantic import BaseModel, Field
 
 
 class RawPostResponse(BaseModel):
+    """API response shape for a single raw post."""
+
     id: UUID
     source: str
     source_id: str
@@ -24,6 +28,8 @@ class RawPostResponse(BaseModel):
 
 
 class PaginatedResponse(BaseModel):
+    """A page of posts with pagination metadata."""
+
     items: list[RawPostResponse]
     total: int
     page: int
@@ -32,16 +38,22 @@ class PaginatedResponse(BaseModel):
 
 
 class IngestRedditRequest(BaseModel):
+    """Request body for triggering a live Reddit ingestion."""
+
     subreddits: list[str] = Field(default=["EAFC"], description="Subreddits to pull from")
     limit: int = Field(default=100, ge=1, le=500, description="Max posts per subreddit")
     sort: str = Field(default="hot", pattern="^(hot|new|top|rising)$")
 
 
 class IngestSeedRequest(BaseModel):
+    """Request body for loading seed data."""
+
     clear_existing: bool = Field(default=False, description="Remove all existing posts before seeding")
 
 
 class IngestionLogResponse(BaseModel):
+    """API response shape for an ingestion run log."""
+
     id: UUID
     source: str
     subreddit: str | None = None
@@ -57,12 +69,16 @@ class IngestionLogResponse(BaseModel):
 
 
 class IngestStatusResponse(BaseModel):
+    """Overview of the ingestion system's current state."""
+
     last_run: IngestionLogResponse | None = None
     total_posts: int
     unprocessed_posts: int
 
 
 class HealthResponse(BaseModel):
+    """Health check response."""
+
     status: str
     service: str
     version: str

@@ -1,3 +1,5 @@
+"""Endpoints for batch processing, querying processed posts, and category breakdowns."""
+
 import logging
 from uuid import UUID
 
@@ -37,6 +39,7 @@ def process_batch(
     request: BatchProcessRequest,
     db: Session = Depends(get_db),
 ):
+    """Run the NLP pipeline on a batch of unprocessed posts."""
     unprocessed = (
         db.query(RawPost)
         .filter(RawPost.processed == False)
@@ -124,6 +127,7 @@ def process_batch(
 
 @router.get("/status", response_model=ProcessingStatusResponse)
 def get_processing_status(db: Session = Depends(get_db)):
+    """Return how many posts have been processed vs still pending."""
     total = db.query(func.count(RawPost.id)).scalar()
     processed = (
         db.query(func.count(RawPost.id))
@@ -158,6 +162,7 @@ def list_processed_posts(
     sort_order: str = Query(default="desc", pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
 ):
+    """Return a paginated list of processed posts with optional filters."""
     query = (
         db.query(
             ProcessedPost.id,
@@ -239,6 +244,7 @@ def list_processed_posts(
 
 @processed_router.get("/{processed_id}", response_model=ProcessedPostDetail)
 def get_processed_post(processed_id: UUID, db: Session = Depends(get_db)):
+    """Return a single processed post by ID with original post data."""
     row = (
         db.query(
             ProcessedPost.id,
@@ -293,6 +299,7 @@ categories_router = APIRouter(prefix="/categories", tags=["Categories"])
 
 @categories_router.get("", response_model=CategoriesResponse)
 def get_categories(db: Session = Depends(get_db)):
+    """Return all categories and subcategories with post counts."""
     counts = (
         db.query(
             ProcessedPost.category,

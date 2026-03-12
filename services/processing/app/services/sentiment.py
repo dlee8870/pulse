@@ -1,3 +1,5 @@
+"""Sentiment analysis using a pre-trained HuggingFace model with gaming-context corrections."""
+
 import logging
 import re
 
@@ -23,7 +25,14 @@ NEGATIVE_CONTEXT_PHRASES = [
 
 
 class SentimentAnalyzer:
+    """Scores text from -1.0 (very negative) to +1.0 (very positive).
+
+    Layers domain-specific corrections on top of the model's raw output
+    to handle sarcasm and gaming language the model doesn't understand.
+    """
+
     def __init__(self, model_name: str = "cardiffnlp/twitter-roberta-base-sentiment-latest"):
+        """Load the sentiment model into memory."""
         logger.info("Loading sentiment model: %s", model_name)
         self._pipeline = pipeline(
             "sentiment-analysis",
@@ -36,6 +45,7 @@ class SentimentAnalyzer:
         logger.info("Sentiment model loaded")
 
     def _detect_sarcasm(self, text: str) -> bool:
+        """Check for sarcasm patterns like 'literally perfect' used as complaints."""
         text_lower = text.lower()
         for pattern in SARCASM_PATTERNS:
             if re.search(pattern, text_lower):
@@ -43,10 +53,12 @@ class SentimentAnalyzer:
         return False
 
     def _count_negative_context(self, text: str) -> int:
+        """Count negative gaming phrases in the text."""
         text_lower = text.lower()
         return sum(1 for phrase in NEGATIVE_CONTEXT_PHRASES if phrase in text_lower)
 
     def analyze(self, text: str, category: str | None = None) -> float:
+        """Return a sentiment score from -1.0 to +1.0 for the given text."""
         if not text or not text.strip():
             return 0.0
 

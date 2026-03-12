@@ -1,3 +1,5 @@
+"""Database table definitions for raw posts and ingestion logs."""
+
 import uuid
 from datetime import datetime, timezone
 
@@ -8,10 +10,13 @@ from app.database import Base
 
 
 def utcnow():
+    """Return the current UTC timestamp."""
     return datetime.now(timezone.utc)
 
 
 class RawPost(Base):
+    """A community post pulled from Reddit or loaded from seed data."""
+
     __tablename__ = "raw_posts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -31,6 +36,8 @@ class RawPost(Base):
 
 
 class IngestionLog(Base):
+    """Tracks the result of a single ingestion run (fetched, new, duplicates, status)."""
+
     __tablename__ = "ingestion_logs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

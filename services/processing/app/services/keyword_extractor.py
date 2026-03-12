@@ -1,3 +1,5 @@
+"""Keyword extraction combining known gaming terms and frequently repeated words."""
+
 import re
 from collections import Counter
 
@@ -38,11 +40,14 @@ GAMING_TERMS = {
 
 
 class KeywordExtractor:
+    """Extracts relevant keywords from post text."""
+
     def __init__(self):
         self.stop_words = STOP_WORDS
         self.gaming_terms = GAMING_TERMS
 
     def extract(self, title: str, body: str, max_keywords: int = 8) -> list[str]:
+        """Return up to max_keywords from the post, gaming terms first."""
         text = f"{title} {body or ''}".lower()
         clean_text = re.sub(r"[^a-z0-9\s]", " ", text)
 

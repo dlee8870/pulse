@@ -1,3 +1,5 @@
+"""Endpoints for ingesting data from Reddit and seed files."""
+
 import json
 import logging
 from datetime import datetime, timezone
@@ -29,6 +31,7 @@ def trigger_reddit_ingestion(
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ):
+    """Fetch posts from Reddit and store new ones in the database."""
     if not settings.reddit_client_id or not settings.reddit_client_secret:
         raise HTTPException(
             status_code=400,
@@ -105,6 +108,7 @@ def trigger_seed_ingestion(
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ):
+    """Load seed data from a local JSON file into the database."""
     seed_path = Path(settings.seed_data_path)
     if not seed_path.exists():
         raise HTTPException(status_code=404, detail=f"Seed data not found at {seed_path}")
@@ -164,6 +168,7 @@ def trigger_seed_ingestion(
 
 @router.get("/status", response_model=IngestStatusResponse)
 def get_ingestion_status(db: Session = Depends(get_db)):
+    """Return the last ingestion run and current post counts."""
     last_run = (
         db.query(IngestionLog)
         .order_by(IngestionLog.started_at.desc())
@@ -188,6 +193,7 @@ def get_ingestion_logs(
     limit: int = 10,
     db: Session = Depends(get_db),
 ):
+    """Return recent ingestion logs, newest first."""
     logs = (
         db.query(IngestionLog)
         .order_by(IngestionLog.started_at.desc())
