@@ -59,5 +59,18 @@ services:
       redis:
         condition: service_healthy
 
+  analytics:
+    build:
+      context: ./services/analytics
+    ports:
+      - "8003:8000"
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/pulse
+      DB_USERNAME: pulse
+      DB_PASSWORD: pulse_dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres_data:
