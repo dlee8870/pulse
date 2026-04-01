@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
+/** Represents a game patch or title update, used for before-vs-after impact analysis. */
 @Entity
 @Table(name = "patches")
 public class Patch {

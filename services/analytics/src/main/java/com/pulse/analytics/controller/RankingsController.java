@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** Serves the ranked list of community issues ordered by composite severity. */
 @RestController
 @RequestMapping("/api/rankings")
 public class RankingsController {
@@ -17,6 +18,7 @@ public class RankingsController {
         this.rankingService = rankingService;
     }
 
+    /** Returns all issue subcategories ranked from most severe to least severe. */
     @GetMapping
     public List<RankingEntry> getRankings() {
         return rankingService.getRankings();

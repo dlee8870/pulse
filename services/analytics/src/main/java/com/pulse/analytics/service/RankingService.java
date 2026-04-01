@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
+/** Ranks community issues by a composite score combining severity, sentiment, and volume. */
 @Service
 public class RankingService {
 
@@ -16,6 +17,7 @@ public class RankingService {
         this.processedPostRepo = processedPostRepo;
     }
 
+    /** Scores and ranks all non-positive subcategories, returning them from most severe to least. */
     public List<RankingEntry> getRankings() {
         List<Object[]> data = processedPostRepo.getRankingData();
 
@@ -59,6 +61,10 @@ public class RankingService {
         return ranked;
     }
 
+    /**
+     * Calculates a composite score from 0.0 to ~1.0.
+     * Weights: 40% severity, 30% negative sentiment intensity, 30% log-scaled volume.
+     */
     private double computeComposite(long count, double avgSentiment, double avgSeverity) {
         double volumeFactor = Math.log1p(count) / Math.log1p(100);
         double sentimentFactor = Math.abs(Math.min(0, avgSentiment));

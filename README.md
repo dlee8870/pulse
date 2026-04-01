@@ -67,14 +67,19 @@ Pulse transforms scattered community feedback into structured, prioritized, data
    http://localhost:8001/docs
    ```
 
-5. Load seed data (in the Swagger UI, execute `POST /api/ingest/seed`):
+5. Open the Issue Service API docs:
+   ```
+   http://localhost:8004/docs
+   ```
+
+6. Load seed data (in the Swagger UI, execute `POST /api/ingest/seed`):
    ```json
    {
      "clear_existing": false
    }
    ```
 
-6. Query posts:
+7. Query posts:
    ```
    GET http://localhost:8001/api/posts?page=1&page_size=10
    ```
@@ -95,7 +100,7 @@ To pull live data from Reddit:
 | Ingestion | 8001 | Data ingestion from Reddit and seed files |
 | Processing | 8002 | NLP classification, sentiment analysis, entity extraction |
 | Analytics | 8003 | Trend analysis, patch correlation, issue ranking |
-| Issues | 8004 | Auto-generated issue tracking and alerts |
+| Issues | 8004 | Auto-generated issue tracking, lifecycle updates, and alerts |
 | Gateway | 8000 | Unified API entry point with auth and routing |
 
 ## Project Status
@@ -103,6 +108,6 @@ To pull live data from Reddit:
 - [x] Stage 1: Foundation + Ingestion Service
 - [ ] Stage 2: NLP Processing Pipeline
 - [ ] Stage 3: Analytics Engine (Java/Spring Boot)
-- [ ] Stage 4: Issue Management
+- [x] Stage 4: Issue Management
 - [ ] Stage 5: API Gateway + Integration
 - [ ] Stage 6: Polish + Portfolio Ready

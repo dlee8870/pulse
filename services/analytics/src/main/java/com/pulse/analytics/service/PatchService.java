@@ -15,6 +15,10 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
+/**
+ * Manages game patches and measures their impact on community sentiment.
+ * Compares post metrics from the week before a patch to the week after.
+ */
 @Service
 public class PatchService {
 
@@ -28,6 +32,7 @@ public class PatchService {
         this.processedPostRepo = processedPostRepo;
     }
 
+    /** Saves a new patch record to the database. */
     public PatchResponse createPatch(PatchRequest request) {
         Patch patch = new Patch();
         patch.setVersion(request.version());
@@ -38,12 +43,14 @@ public class PatchService {
         return toResponse(patch);
     }
 
+    /** Returns all patches ordered by release date, newest first. */
     public List<PatchResponse> getAllPatches() {
         return patchRepo.findAllByOrderByReleaseDateDesc().stream()
                 .map(this::toResponse)
                 .toList();
     }
 
+    /** Deletes a patch by ID. Throws if the patch doesn't exist. */
     public void deletePatch(UUID patchId) {
         if (!patchRepo.existsById(patchId)) {
             throw new IllegalArgumentException("Patch not found: " + patchId);
@@ -51,6 +58,11 @@ public class PatchService {
         patchRepo.deleteById(patchId);
     }
 
+    /**
+     * Builds a before-vs-after comparison for a patch.
+     * Looks at the 7 days before and 7 days after the release date,
+     * then calculates changes in volume, sentiment, and severity.
+     */
     public PatchImpactResponse getImpact(UUID patchId) {
         Patch patch = patchRepo.findById(patchId)
                 .orElseThrow(() -> new IllegalArgumentException("Patch not found: " + patchId));
@@ -82,6 +94,7 @@ public class PatchService {
         );
     }
 
+    /** Aggregates post count, sentiment, severity, and category breakdown for a date range. */
     private PeriodMetrics buildMetrics(OffsetDateTime start, OffsetDateTime end) {
         List<Object[]> rows = processedPostRepo.getMetricsBetween(start, end);
 
@@ -104,6 +117,7 @@ public class PatchService {
         return new PeriodMetrics(count, round(avgSentiment), round(avgSeverity), categories);
     }
 
+    /** Converts a Patch entity into a PatchResponse DTO for the API. */
     private PatchResponse toResponse(Patch patch) {
         return new PatchResponse(
                 patch.getId(),
@@ -114,6 +128,7 @@ public class PatchService {
         );
     }
 
+    /** Converts a raw database row into a typed CategoryBreakdown DTO. */
     private CategoryBreakdown toBreakdown(Object[] row) {
         return new CategoryBreakdown(
                 (String) row[0],

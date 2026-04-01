@@ -7,6 +7,10 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Read-only mapping of the raw_posts table.
+ * This table is owned by the Ingestion Service — Analytics only reads from it.
+ */
 @Entity
 @Table(name = "raw_posts")
 public class RawPost {

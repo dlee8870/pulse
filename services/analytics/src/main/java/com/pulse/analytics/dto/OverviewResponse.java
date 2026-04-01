@@ -2,6 +2,7 @@ package com.pulse.analytics.dto;
 
 import java.util.List;
 
+/** Platform-wide summary: total posts, average scores, and a breakdown by category. */
 public record OverviewResponse(
         long totalProcessed,
         long totalRaw,

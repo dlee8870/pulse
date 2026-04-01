@@ -13,6 +13,11 @@ import java.util.UUID;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+/**
+ * Read-only mapping of the processed_posts table.
+ * This table is owned by the Processing Service — Analytics only reads from it.
+ * Each processed post links back to its original raw post.
+ */
 @Entity
 @Table(name = "processed_posts")
 public class ProcessedPost {

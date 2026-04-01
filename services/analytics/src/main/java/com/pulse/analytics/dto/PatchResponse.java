@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
+/** API response for a registered game patch. */
 public record PatchResponse(
         UUID id,
         String version,

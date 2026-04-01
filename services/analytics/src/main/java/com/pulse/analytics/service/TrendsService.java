@@ -8,6 +8,7 @@ import com.pulse.analytics.repository.RawPostRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
+/** Aggregates processed post data into platform-wide overviews and per-category breakdowns. */
 @Service
 public class TrendsService {
 
@@ -19,6 +20,7 @@ public class TrendsService {
         this.rawPostRepo = rawPostRepo;
     }
 
+    /** Builds a high-level summary: total posts, average scores, and counts per category. */
     public OverviewResponse getOverview() {
         long totalProcessed = processedPostRepo.count();
         long totalRaw = rawPostRepo.count();
@@ -39,6 +41,7 @@ public class TrendsService {
         );
     }
 
+    /** Drills into a single category, showing its subcategories and weighted average scores. */
     public CategoryDetailResponse getCategoryDetail(String category) {
         long totalPosts = processedPostRepo.countByCategory(category);
 
@@ -63,6 +66,7 @@ public class TrendsService {
         );
     }
 
+    /** Converts a raw database row into a typed CategoryBreakdown DTO. */
     private CategoryBreakdown toBreakdown(Object[] row) {
         return new CategoryBreakdown(
                 (String) row[0],
