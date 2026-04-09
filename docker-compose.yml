@@ -28,8 +28,6 @@ services:
   ingestion:
     build:
       context: ./services/ingestion
-    ports:
-      - "8001:8000"
     env_file:
       - .env
     environment:
@@ -46,8 +44,6 @@ services:
   processing:
     build:
       context: ./services/processing
-    ports:
-      - "8002:8000"
     env_file:
       - .env
     environment:
@@ -62,8 +58,6 @@ services:
   analytics:
     build:
       context: ./services/analytics
-    ports:
-      - "8003:8000"
     environment:
       DATABASE_URL: jdbc:postgresql://postgres:5432/pulse
       DB_USERNAME: pulse
@@ -75,8 +69,6 @@ services:
   issues:
     build:
       context: ./services/issues
-    ports:
-      - "8004:8000"
     env_file:
       - .env
     environment:
@@ -87,6 +79,28 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  gateway:
+    build:
+      context: ./services/gateway
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://pulse:pulse_dev@postgres:5432/pulse
+      REDIS_URL: redis://redis:6379/0
+      INGESTION_SERVICE_URL: http://ingestion:8000
+      PROCESSING_SERVICE_URL: http://processing:8000
+      ANALYTICS_SERVICE_URL: http://analytics:8000
+      ISSUES_SERVICE_URL: http://issues:8000
+    depends_on:
+      - postgres
+      - redis
+      - ingestion
+      - processing
+      - analytics
+      - issues
 
 volumes:
   postgres_data:

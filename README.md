@@ -1,113 +1,123 @@
 # Pulse
 
-**Live-Service Game Community Intelligence Platform**
+Community intelligence platform for live-service games. Pulls player feedback from Reddit, classifies it with NLP, ranks issues by severity, and tracks how patches affect community sentiment.
 
-Pulse transforms scattered community feedback into structured, prioritized, data-backed intelligence for game developers. It ingests posts from community sources, processes them through an NLP pipeline to classify and cluster feedback, tracks issue trends over time, and correlates complaint patterns with game patches.
+Built around EA FC as the demo dataset, but the architecture works for any game with an active subreddit.
+
+## What it does
+
+Players complain on Reddit about their favorite games. Pulse turns that noise into signal:
+
+1. **Ingests** posts from Reddit (or seed data) and stores them
+2. **Classifies** each post by category (gameplay bug, UI bug, balance, server issues, etc.) and runs sentiment analysis
+3. **Ranks** issues by a composite severity score and compares community health before vs after patches
+4. **Auto-generates issues** by clustering related complaints — like a bug tracker that populates itself
+5. **Fires alerts** when complaint volume spikes past configurable thresholds
+
+Everything runs through a single API gateway with JWT auth and rate limiting.
 
 ## Architecture
 
+Five services, one database, one cache. Everything containerized.
+
 ```
-┌──────────────────────┐
-│     API Gateway       │
-│   (Python/FastAPI)    │
-└──┬───┬───┬───┬───────┘
-   │   │   │   │
-   ▼   ▼   ▼   ▼
-┌──────┐┌──────┐┌──────┐┌──────┐
-│Ingest││Proc. ││Anal. ││Issue │
-│(Py)  ││(Py)  ││(Java)││(Py)  │
-└──┬───┘└──┬───┘└──┬───┘└──┬───┘
-   └───────┴───┬───┴───────┘
-               │
-        ┌──────┴──────┐
-        │ PostgreSQL  │
-        │ Redis       │
-        └─────────────┘
+Gateway :8000 (auth, rate limiting, routing)
+  ├── Ingestion  :8001  (Python/FastAPI)
+  ├── Processing :8002  (Python/FastAPI)
+  ├── Analytics  :8003  (Java/Spring Boot)
+  └── Issues     :8004  (Python/FastAPI)
+
+PostgreSQL — shared database
+Redis — rate limiting + caching
 ```
 
-## Tech Stack
+## Tech stack
 
-| Component | Technology |
-|-----------|-----------|
-| Python Services | FastAPI, SQLAlchemy, Pydantic |
-| Java Service | Spring Boot, Spring Data JPA |
-| Database | PostgreSQL 16 |
-| Cache | Redis 7 |
-| NLP | HuggingFace Transformers, spaCy |
-| Containers | Docker, Docker Compose |
-| API Docs | Swagger / OpenAPI (auto-generated) |
+- **Python/FastAPI** — ingestion, processing, issues, gateway
+- **Java/Spring Boot** — analytics service
+- **PostgreSQL 16** — primary database
+- **Redis 7** — rate limiting
+- **HuggingFace Transformers** — sentiment analysis (cardiffnlp/twitter-roberta-base)
+- **Docker Compose** — runs everything with one command
 
-## Quick Start
+## Quick start
 
-### Prerequisites
+```bash
+git clone <repo-url>
+cd pulse
+cp .env.example .env
+docker-compose up --build
+```
 
-- Docker Desktop
-- Git
 
-### Setup
+## Running the pipeline
 
-1. Clone the repository:
-   ```bash
-   git clone <repo-url>
-   cd pulse
-   ```
+Once everything is up, run these in order:
 
-2. Copy the environment template:
-   ```bash
-   cp .env.example .env
-   ```
+**1. Load seed data** — `http://localhost:8001/docs`
+```
+POST /api/ingest/seed  →  {"clear_existing": false}
+```
 
-3. Start all services:
-   ```bash
-   docker-compose up --build
-   ```
+**2. Process posts** — `http://localhost:8002/docs`
+```
+POST /api/process/batch  →  {"batch_size": 50}
+```
 
-4. Open the Ingestion Service API docs:
-   ```
-   http://localhost:8001/docs
-   ```
+**3. Check analytics** — `http://localhost:8003/docs`
+```
+GET /api/trends/overview
+GET /api/rankings
+```
 
-5. Open the Issue Service API docs:
-   ```
-   http://localhost:8004/docs
-   ```
+**4. Generate issues** — `http://localhost:8004/docs`
+```
+POST /api/issues/auto-generate  →  {}
+```
 
-6. Load seed data (in the Swagger UI, execute `POST /api/ingest/seed`):
-   ```json
-   {
-     "clear_existing": false
-   }
-   ```
+**5. Use the gateway** — `http://localhost:8000/docs`
 
-7. Query posts:
-   ```
-   GET http://localhost:8001/api/posts?page=1&page_size=10
-   ```
+Login first:
+```
+POST /auth/login  →  {"username": "admin", "password": "pulse-admin"}
+```
 
-### Reddit Integration (Optional)
-
-To pull live data from Reddit:
-
-1. Go to https://www.reddit.com/prefs/apps
-2. Create a new application (select "script" type)
-3. Copy the client ID and secret into your `.env` file
-4. Use the `POST /api/ingest/reddit` endpoint
+Copy the token, click "Authorize" in Swagger, paste `Bearer <token>`. Now all `/api/*` routes go through the gateway with auth and rate limiting.
 
 ## Services
 
-| Service | Port | Description |
+| Service | Port | What it does |
 |---------|------|-------------|
-| Ingestion | 8001 | Data ingestion from Reddit and seed files |
-| Processing | 8002 | NLP classification, sentiment analysis, entity extraction |
-| Analytics | 8003 | Trend analysis, patch correlation, issue ranking |
-| Issues | 8004 | Auto-generated issue tracking, lifecycle updates, and alerts |
-| Gateway | 8000 | Unified API entry point with auth and routing |
+| Gateway | 8000 | Auth, rate limiting, routes to backend services |
+| Ingestion | 8001 | Pulls posts from Reddit or loads seed data |
+| Processing | 8002 | NLP classification, sentiment, severity scoring |
+| Analytics | 8003 | Trend aggregation, patch impact, issue rankings |
+| Issues | 8004 | Auto-generated issue tracker with alerts |
 
-## Project Status
+## Reddit integration (optional)
 
-- [x] Stage 1: Foundation + Ingestion Service
-- [ ] Stage 2: NLP Processing Pipeline
-- [ ] Stage 3: Analytics Engine (Java/Spring Boot)
-- [x] Stage 4: Issue Management
-- [ ] Stage 5: API Gateway + Integration
-- [ ] Stage 6: Polish + Portfolio Ready
+If you want live Reddit data:
+
+1. Go to https://www.reddit.com/prefs/apps
+2. Create a "script" type application
+3. Add your credentials to `.env`:
+```
+REDDIT_CLIENT_ID=your_id
+REDDIT_CLIENT_SECRET=your_secret
+```
+4. Hit `POST /api/ingest/reddit` on port 8001
+
+## Project structure
+
+```
+pulse/
+├── docker-compose.yml
+├── data/seed_posts.json          # 30 hand-picked EA FC community posts
+├── services/
+│   ├── gateway/                  # Python — auth, rate limiting, routing
+│   ├── ingestion/                # Python — Reddit API, seed loading
+│   ├── processing/               # Python — NLP pipeline
+│   ├── analytics/                # Java  — trends, rankings, patch impact
+│   └── issues/                   # Python — issue tracking, alerts
+└── .env.example
+```
