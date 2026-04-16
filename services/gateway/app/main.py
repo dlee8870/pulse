@@ -10,8 +10,10 @@ from redis.asyncio import from_url
 
 from app.config import get_settings
 from app.database import Base, SessionLocal, engine
+from app.error_handlers import register_exception_handlers
 from app.models import ApiUser
 from app.routers.auth import router as auth_router
+from app.routers.documented_proxy import router as documented_proxy_router
 from app.routers.health import router as health_router
 from app.routers.proxy import router as proxy_router
 from app.security import hash_password
@@ -71,6 +73,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+register_exception_handlers(app)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
@@ -81,4 +85,5 @@ app.add_middleware(
 
 app.include_router(auth_router, prefix="/api")
 app.include_router(health_router)
+app.include_router(documented_proxy_router)
 app.include_router(proxy_router)

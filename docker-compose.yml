@@ -38,6 +38,17 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - ./data:/app/data
 
@@ -54,6 +65,17 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   analytics:
     build:
@@ -65,6 +87,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   issues:
     build:
@@ -79,6 +106,17 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   gateway:
     build:
@@ -95,12 +133,18 @@ services:
       ANALYTICS_SERVICE_URL: http://analytics:8000
       ISSUES_SERVICE_URL: http://issues:8000
     depends_on:
-      - postgres
-      - redis
-      - ingestion
-      - processing
-      - analytics
-      - issues
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ingestion:
+        condition: service_healthy
+      processing:
+        condition: service_healthy
+      analytics:
+        condition: service_healthy
+      issues:
+        condition: service_healthy
 
 volumes:
   postgres_data:

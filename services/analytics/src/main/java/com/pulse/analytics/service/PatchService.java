@@ -5,6 +5,7 @@ import com.pulse.analytics.dto.PatchImpactResponse;
 import com.pulse.analytics.dto.PatchImpactResponse.PeriodMetrics;
 import com.pulse.analytics.dto.PatchRequest;
 import com.pulse.analytics.dto.PatchResponse;
+import com.pulse.analytics.exception.ResourceNotFoundException;
 import com.pulse.analytics.model.Patch;
 import com.pulse.analytics.repository.PatchRepository;
 import com.pulse.analytics.repository.ProcessedPostRepository;
@@ -53,7 +54,7 @@ public class PatchService {
     /** Deletes a patch by ID. Throws if the patch doesn't exist. */
     public void deletePatch(UUID patchId) {
         if (!patchRepo.existsById(patchId)) {
-            throw new IllegalArgumentException("Patch not found: " + patchId);
+            throw new ResourceNotFoundException("Patch not found: " + patchId);
         }
         patchRepo.deleteById(patchId);
     }
@@ -65,7 +66,7 @@ public class PatchService {
      */
     public PatchImpactResponse getImpact(UUID patchId) {
         Patch patch = patchRepo.findById(patchId)
-                .orElseThrow(() -> new IllegalArgumentException("Patch not found: " + patchId));
+                .orElseThrow(() -> new ResourceNotFoundException("Patch not found: " + patchId));
 
         LocalDate releaseDate = patch.getReleaseDate();
 

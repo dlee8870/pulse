@@ -1,5 +1,6 @@
 """Request and response schemas for the ingestion API."""
 
+from typing import Any
 from datetime import datetime
 from uuid import UUID
 
@@ -82,3 +83,12 @@ class HealthResponse(BaseModel):
     status: str
     service: str
     version: str
+
+
+class ErrorResponse(BaseModel):
+    """Standard API error response."""
+
+    error: str
+    detail: Any
+    path: str
+    timestamp: datetime

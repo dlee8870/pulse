@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.database import Base, engine
+from app.error_handlers import register_exception_handlers
 from app.models import Alert, AlertRule, Issue, IssueEvent, IssuePost, ProcessedPost, RawPost
 from app.routers.alerts import router as alerts_router
 from app.routers.issues import router as issues_router
@@ -34,6 +35,8 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+register_exception_handlers(app)
 
 app.include_router(issues_router, prefix="/api")
 app.include_router(alerts_router, prefix="/api")

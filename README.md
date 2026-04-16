@@ -1,123 +1,173 @@
 # Pulse
 
-Community intelligence platform for live-service games. Pulls player feedback from Reddit, classifies it with NLP, ranks issues by severity, and tracks how patches affect community sentiment.
+Pulse is a community intelligence platform for live-service games. It ingests player feedback from Reddit, classifies it with NLP, ranks problem areas by severity, and turns repeated complaints into tracked issues that a dev team can act on.
 
-Built around EA FC as the demo dataset, but the architecture works for any game with an active subreddit.
-
-## What it does
-
-Players complain on Reddit about their favorite games. Pulse turns that noise into signal:
-
-1. **Ingests** posts from Reddit (or seed data) and stores them
-2. **Classifies** each post by category (gameplay bug, UI bug, balance, server issues, etc.) and runs sentiment analysis
-3. **Ranks** issues by a composite severity score and compares community health before vs after patches
-4. **Auto-generates issues** by clustering related complaints — like a bug tracker that populates itself
-5. **Fires alerts** when complaint volume spikes past configurable thresholds
-
-Everything runs through a single API gateway with JWT auth and rate limiting.
+The demo data is built around EA FC, but the architecture is general enough to work for any game with an active subreddit.
 
 ## Architecture
 
-Five services, one database, one cache. Everything containerized.
+Pulse is split into five services:
 
-```
-Gateway :8000 (auth, rate limiting, routing)
-  ├── Ingestion  :8001  (Python/FastAPI)
-  ├── Processing :8002  (Python/FastAPI)
-  ├── Analytics  :8003  (Java/Spring Boot)
-  └── Issues     :8004  (Python/FastAPI)
+- Gateway: FastAPI service for JWT auth, rate limiting, routing, and health checks
+- Ingestion: FastAPI service for seed-data loading and Reddit ingestion
+- Processing: FastAPI service for classification, sentiment, keywords, and severity scoring
+- Analytics: Spring Boot service for trends, rankings, and patch impact
+- Issues: FastAPI service for issue generation, lifecycle tracking, and alerts
 
-PostgreSQL — shared database
-Redis — rate limiting + caching
-```
+Shared infrastructure:
 
-## Tech stack
+- PostgreSQL 16 for application data
+- Redis 7 for rate limiting
+- Docker Compose for local orchestration
 
-- **Python/FastAPI** — ingestion, processing, issues, gateway
-- **Java/Spring Boot** — analytics service
-- **PostgreSQL 16** — primary database
-- **Redis 7** — rate limiting
-- **HuggingFace Transformers** — sentiment analysis (cardiffnlp/twitter-roberta-base)
-- **Docker Compose** — runs everything with one command
+The gateway on `http://localhost:8000` is the main entry point. Backend services run on the internal Docker network.
 
-## Quick start
+## Tech Stack
+
+- Python 3.11
+- FastAPI
+- SQLAlchemy
+- Pydantic
+- Java 17
+- Spring Boot
+- PostgreSQL
+- Redis
+- HuggingFace Transformers
+- Docker Compose
+
+## Quick Start
 
 ```bash
 git clone <repo-url>
 cd pulse
 cp .env.example .env
-docker-compose up --build
+docker compose up --build
 ```
 
+Open the gateway docs:
 
-## Running the pipeline
-
-Once everything is up, run these in order:
-
-**1. Load seed data** — `http://localhost:8001/docs`
-```
-POST /api/ingest/seed  →  {"clear_existing": false}
+```text
+http://localhost:8000/docs
 ```
 
-**2. Process posts** — `http://localhost:8002/docs`
-```
-POST /api/process/batch  →  {"batch_size": 50}
+Log in through the gateway:
+
+```text
+POST /api/auth/login
 ```
 
-**3. Check analytics** — `http://localhost:8003/docs`
-```
-GET /api/trends/overview
-GET /api/rankings
+Default credentials:
+
+```json
+{
+  "username": "pulse_admin",
+  "password": "pulse_admin"
+}
 ```
 
-**4. Generate issues** — `http://localhost:8004/docs`
-```
-POST /api/issues/auto-generate  →  {}
+Authorize Swagger with:
+
+```text
+Bearer <token>
 ```
 
-**5. Use the gateway** — `http://localhost:8000/docs`
+## Typical Demo Flow
 
-Login first:
-```
-POST /auth/login  →  {"username": "admin", "password": "pulse-admin"}
+Run these in order through the gateway:
+
+```text
+POST /api/ingest/seed
+POST /api/process/batch
+POST /api/issues/auto-generate
+GET  /api/trends/overview
+GET  /api/rankings
+GET  /api/issues?page=1&page_size=5
 ```
 
-Copy the token, click "Authorize" in Swagger, paste `Bearer <token>`. Now all `/api/*` routes go through the gateway with auth and rate limiting.
+## Testing
+
+For a full-stack smoke test on Windows PowerShell:
+
+```powershell
+.\scripts\smoke-test.ps1
+```
+
+For the same smoke test plus negative-path checks:
+
+```powershell
+.\scripts\smoke-test.ps1 -CheckNegativeCases
+```
+
+For the gateway unit tests:
+
+```powershell
+python -m pip install -r .\services\gateway\requirements-dev.txt
+python -m pytest .\services\gateway\tests
+```
+
+More detail:
+
+- [Testing Guide](docs/testing.md)
+- [Demo Walkthrough](docs/demo-walkthrough.md)
 
 ## Services
 
-| Service | Port | What it does |
-|---------|------|-------------|
-| Gateway | 8000 | Auth, rate limiting, routes to backend services |
-| Ingestion | 8001 | Pulls posts from Reddit or loads seed data |
-| Processing | 8002 | NLP classification, sentiment, severity scoring |
-| Analytics | 8003 | Trend aggregation, patch impact, issue rankings |
-| Issues | 8004 | Auto-generated issue tracker with alerts |
+| Service | Main responsibility |
+|---------|----------------------|
+| Gateway | Auth, rate limiting, routing, health aggregation |
+| Ingestion | Seed and Reddit ingestion, raw post queries |
+| Processing | NLP classification, sentiment, keywords, severity |
+| Analytics | Trends, rankings, patch impact |
+| Issues | Issue generation, lifecycle tracking, alerts |
 
-## Reddit integration (optional)
+## What Each Stage Added
 
-If you want live Reddit data:
+- Stage 1: Ingestion pipeline and raw post storage
+- Stage 2: NLP processing and severity scoring
+- Stage 3: Analytics and patch impact analysis
+- Stage 4: Issue generation, lifecycle management, and alerts
+- Stage 5: API gateway with JWT auth and rate limiting
+- Stage 6: Error handling, test tooling, smoke tests, and final docs polish
 
-1. Go to https://www.reddit.com/prefs/apps
-2. Create a "script" type application
-3. Add your credentials to `.env`:
-```
-REDDIT_CLIENT_ID=your_id
-REDDIT_CLIENT_SECRET=your_secret
-```
-4. Hit `POST /api/ingest/reddit` on port 8001
+## Environment Variables
 
-## Project structure
+`.env.example` includes:
 
-```
+- `DATABASE_URL`
+- `REDIS_URL`
+- `REDDIT_CLIENT_ID`
+- `REDDIT_CLIENT_SECRET`
+- `REDDIT_USER_AGENT`
+- `JWT_SECRET_KEY`
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD`
+- `CORS_ORIGINS`
+
+Reddit credentials are optional if you only want to use the seed dataset.
+
+## Repo Structure
+
+```text
 pulse/
-├── docker-compose.yml
-├── data/seed_posts.json          # 30 hand-picked EA FC community posts
-├── services/
-│   ├── gateway/                  # Python — auth, rate limiting, routing
-│   ├── ingestion/                # Python — Reddit API, seed loading
-│   ├── processing/               # Python — NLP pipeline
-│   ├── analytics/                # Java  — trends, rankings, patch impact
-│   └── issues/                   # Python — issue tracking, alerts
-└── .env.example
+|-- data/
+|   |-- seed_posts.json
+|-- docs/
+|   |-- demo-walkthrough.md
+|   `-- testing.md
+|-- scripts/
+|   `-- smoke-test.ps1
+|-- services/
+|   |-- analytics/
+|   |-- gateway/
+|   |-- ingestion/
+|   |-- issues/
+|   `-- processing/
+|-- docker-compose.yml
+`-- README.md
 ```
+
+## Notes
+
+- The seed dataset is intentionally EA FC-focused.
+- Gateway auth is required for normal API use.
+- The smoke test script is the fastest way to prove the stack works end to end.
