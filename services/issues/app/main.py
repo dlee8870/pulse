@@ -4,6 +4,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.database import Base, engine
 from app.error_handlers import register_exception_handlers
@@ -23,7 +24,10 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Create database tables on startup, log on shutdown."""
     logger.info("Creating database tables...")
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except SQLAlchemyError as exc:
+        logger.warning("Table creation skipped: %s", exc)
     logger.info("Issue service started")
     yield
     logger.info("Issue service shutting down")

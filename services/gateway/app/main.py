@@ -7,6 +7,7 @@ import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import from_url
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.config import get_settings
 from app.database import Base, SessionLocal, engine
@@ -51,7 +52,10 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
 
     logger.info("Creating gateway tables...")
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except SQLAlchemyError as exc:
+        logger.warning("Table creation skipped: %s", exc)
     ensure_default_user()
 
     app.state.redis = from_url(settings.redis_url, decode_responses=True)
