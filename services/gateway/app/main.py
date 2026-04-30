@@ -79,6 +79,11 @@ app = FastAPI(
 
 register_exception_handlers(app)
 
+@app.get("/livez", tags=["System"])
+def liveness():
+    """Liveness probe. Returns 200 as long as the process is running."""
+    return {"status": "alive"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
