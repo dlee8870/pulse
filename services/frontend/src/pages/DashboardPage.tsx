@@ -22,23 +22,24 @@ export function DashboardPage() {
       <div className="mb-1 flex items-baseline gap-2.5">
         <h1 className="text-lg font-medium tracking-tightish m-0">Overview</h1>
         {lastUpdated ? (
-          <span className="text-[11px] text-[#8A8984] dark:text-[#6A6A66]">
+          <span className="text-[11px] text-[#6B6FB8] dark:text-[#9C9CB8]">
             Updated {relativeTime(lastUpdated)}
           </span>
         ) : null}
       </div>
-      <p className="text-[13px] text-[#52524E] dark:text-[#9C9C98] mb-5 m-0">
+      <p className="text-[13px] text-[#6B6FB8] dark:text-[#9C9CB8] mb-5 m-0">
         Community feedback signals from r/EAFC and r/FIFA, classified and ranked.
       </p>
 
       <OverviewStrip />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1.45fr_1fr] gap-3 mb-3">
+      <div className="grid grid-cols-1 lg:grid-cols-[1.45fr_1fr] gap-3">
         <TopIssuesTable />
-        <CategoryBreakdown />
+        <div className="flex flex-col gap-3">
+          <CategoryBreakdown />
+          <PatchImpactPanel />
+        </div>
       </div>
-
-      <PatchImpactPanel />
     </AppShell>
   );
 }

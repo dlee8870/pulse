@@ -22,9 +22,19 @@ export default {
           dark: "#222226",
         },
         accent: {
-          light: "#4F46E5",
+          light: "#5B5FE5",
           dark: "#818CF8",
         },
+        muted: {
+          light: "#6B6FB8",
+          dark: "#9C9CB8",
+        },
+      },
+      backgroundImage: {
+        "page-gradient-light":
+          "linear-gradient(135deg, #C8CFFF 0%, #DDE2FF 45%, #F0F2FF 100%)",
+        "page-gradient-dark":
+          "linear-gradient(135deg, #1A1B2E 0%, #14142B 45%, #0E0E22 100%)",
       },
       fontFamily: {
         sans: [

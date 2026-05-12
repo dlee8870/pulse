@@ -9,10 +9,22 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  html,
   body {
-    @apply bg-page-light text-[#111110] dark:bg-page-dark dark:text-[#F0F0EE];
+    min-height: 100vh;
+  }
+
+  body {
+    @apply text-[#111110] dark:text-[#F0F0EE];
     margin: 0;
     letter-spacing: -0.011em;
+    background-image: linear-gradient(135deg, #c8cfff 0%, #dde2ff 45%, #f0f2ff 100%);
+    background-attachment: fixed;
+    background-size: cover;
+  }
+
+  html.dark body {
+    background-image: linear-gradient(135deg, #1a1b2e 0%, #14142b 45%, #0e0e22 100%);
   }
 
   :root {

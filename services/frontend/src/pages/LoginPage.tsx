@@ -1,50 +1,29 @@
 import { FormEvent, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { AxiosError } from "axios";
-import { Logo } from "@/components/ui/Logo";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useAuth } from "@/auth/useAuth";
-import type { ApiError } from "@/types/api";
+import { Logo } from "@/components/branding/Logo";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { extractErrorMessage } from "@/lib/format";
 
 type LocationState = {
-  from?: { pathname: string };
+  from?: {
+    pathname?: string;
+  };
 };
 
-function extractErrorMessage(error: unknown): string {
-  if (error instanceof AxiosError) {
-    const status = error.response?.status;
-    if (status === 429) {
-      return "Too many attempts. Wait a moment and try again.";
-    }
-    if (status === 401) {
-      return "Invalid username or password.";
-    }
-    const data = error.response?.data as ApiError | undefined;
-    if (typeof data?.detail === "string") {
-      return data.detail;
-    }
-    if (Array.isArray(data?.detail) && data.detail[0]?.msg) {
-      return data.detail[0].msg;
-    }
-    return "Could not reach the server.";
-  }
-  return "Something went wrong. Please try again.";
-}
-
 export function LoginPage() {
-  const { status, login } = useAuth();
-  const navigate = useNavigate();
+  const { user, login } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  if (status === "authenticated") {
-    const from = (location.state as LocationState | null)?.from?.pathname;
-    return <Navigate to={from ?? "/dashboard"} replace />;
+  if (user) {
+    return <Navigate to={(location.state as LocationState | null)?.from?.pathname ?? "/dashboard"} replace />;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -63,7 +42,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-page-light dark:bg-page-dark">
+    <div className="min-h-screen">
       <div className="absolute top-5 right-5">
         <ThemeToggle />
       </div>
@@ -72,9 +51,11 @@ export function LoginPage() {
         <div
           className={[
             "w-full max-w-sm",
-            "bg-surface-light dark:bg-surface-dark",
+            "bg-surface-light/95 dark:bg-surface-dark/95",
+            "backdrop-blur-sm",
             "border-[0.5px] rounded-container",
-            "border-[rgba(0,0,0,0.09)] dark:border-[rgba(255,255,255,0.08)]",
+            "border-[rgba(0,0,0,0.06)] dark:border-[rgba(255,255,255,0.06)]",
+            "shadow-[0_2px_12px_rgba(91,95,229,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.3)]",
             "p-7",
           ].join(" ")}
         >
@@ -88,7 +69,7 @@ export function LoginPage() {
           <h1 className="text-base font-medium mb-1 tracking-tightish">
             Sign in
           </h1>
-          <p className="text-xs text-[#52524E] dark:text-[#9C9C98] mb-6">
+          <p className="text-xs text-[#6B6FB8] dark:text-[#9C9CB8] mb-6">
             Access the community intelligence dashboard.
           </p>
 
