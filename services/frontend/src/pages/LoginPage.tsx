@@ -1,17 +1,37 @@
 import { FormEvent, useState } from "react";
+import { AxiosError } from "axios";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth/useAuth";
-import { Logo } from "@/components/branding/Logo";
+import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
-import { extractErrorMessage } from "@/lib/format";
+import type { ApiError } from "@/types/api";
 
 type LocationState = {
   from?: {
     pathname?: string;
   };
 };
+
+function extractErrorMessage(err: unknown): string {
+  if (err instanceof AxiosError) {
+    const data = err.response?.data as ApiError | undefined;
+    if (data?.detail) {
+      if (typeof data.detail === "string") {
+        return data.detail;
+      }
+      if (Array.isArray(data.detail) && data.detail[0]?.msg) {
+        return data.detail[0].msg;
+      }
+    }
+    return err.message;
+  }
+  if (err instanceof Error) {
+    return err.message;
+  }
+  return "Sign in failed. Please try again.";
+}
 
 export function LoginPage() {
   const { user, login } = useAuth();
