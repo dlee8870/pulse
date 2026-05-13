@@ -49,6 +49,7 @@ class RawPost(Base):
     subreddit = Column(String(100), index=True)
     score = Column(Integer, default=0)
     comment_count = Column(Integer, default=0)
+    url = Column(String(255))
     posted_at = Column(DateTime(timezone=True), nullable=False)
 
 

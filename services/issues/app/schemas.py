@@ -72,6 +72,7 @@ class IssuePostResponse(BaseModel):
     body: str | None = None
     source: str
     subreddit: str | None = None
+    url: str | None = None
     posted_at: datetime
     category: str
     subcategory: str | None = None

@@ -5,7 +5,7 @@ import {
   fetchRankings,
   fetchTrendsOverview,
 } from "@/api/analytics";
-import { fetchIssues } from "@/api/issues";
+import { fetchIssuePosts, fetchIssues } from "@/api/issues";
 
 export function useTrendsOverview() {
   return useQuery({
@@ -25,6 +25,14 @@ export function useIssuesSummary() {
   return useQuery({
     queryKey: ["issues", "summary"],
     queryFn: () => fetchIssues({ page: 1, pageSize: 100 }),
+  });
+}
+
+export function useIssuePosts(issueId: string | null) {
+  return useQuery({
+    queryKey: ["issues", "posts", issueId],
+    queryFn: () => fetchIssuePosts(issueId as string),
+    enabled: Boolean(issueId),
   });
 }
 

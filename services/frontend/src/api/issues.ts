@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import type { PaginatedIssues } from "@/types/api";
+import type { IssuePostDetail, PaginatedIssues } from "@/types/api";
 
 export type IssuesQuery = {
   page?: number;
@@ -7,6 +7,7 @@ export type IssuesQuery = {
   status?: string;
   severity?: string;
   category?: string;
+  subcategory?: string;
 };
 
 export async function fetchIssues(
@@ -25,9 +26,21 @@ export async function fetchIssues(
   if (query.category) {
     params.category = query.category;
   }
+  if (query.subcategory) {
+    params.subcategory = query.subcategory;
+  }
 
   const { data } = await apiClient.get<PaginatedIssues>("/api/issues", {
     params,
   });
+  return data;
+}
+
+export async function fetchIssuePosts(
+  issueId: string
+): Promise<IssuePostDetail[]> {
+  const { data } = await apiClient.get<IssuePostDetail[]>(
+    `/api/issues/${issueId}/posts`
+  );
   return data;
 }

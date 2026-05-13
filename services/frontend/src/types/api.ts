@@ -74,6 +74,21 @@ export type PaginatedIssues = {
   total_pages: number;
 };
 
+export type IssuePostDetail = {
+  processed_post_id: string;
+  raw_post_id: string;
+  title: string;
+  body: string | null;
+  source: string;
+  subreddit: string | null;
+  url: string | null;
+  posted_at: string;
+  category: string;
+  subcategory: string | null;
+  sentiment_score: number;
+  severity_score: number;
+};
+
 export type Patch = {
   id: string;
   version: string;
