@@ -46,6 +46,14 @@ class IngestRedditRequest(BaseModel):
     sort: str = Field(default="hot", pattern="^(hot|new|top|rising)$")
 
 
+class IngestSteamRequest(BaseModel):
+    """Request body for triggering a Steam review ingestion."""
+
+    app_id: int = Field(default=3405690, description="Steam app id (default: EA SPORTS FC 26)")
+    limit: int = Field(default=300, ge=1, le=2000, description="Max reviews to pull")
+    language: str = Field(default="english", description="Review language to fetch")
+
+
 class IngestSeedRequest(BaseModel):
     """Request body for loading seed data."""
 

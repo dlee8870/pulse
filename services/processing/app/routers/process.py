@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import ProcessedPost, RawPost
 from app.schemas import (
+    AnalyzeRequest,
+    AnalyzeResponse,
     BatchProcessRequest,
     BatchProcessResponse,
     CategoriesResponse,
@@ -19,7 +21,7 @@ from app.schemas import (
     ProcessedPostResponse,
     ProcessingStatusResponse,
 )
-from app.services.classifier import PostClassifier
+from app.services.zero_shot_classifier import ZeroShotClassifier
 from app.services.keyword_extractor import KeywordExtractor
 from app.services.sentiment import SentimentAnalyzer
 from app.services.severity import SeverityScorer
@@ -29,9 +31,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/process", tags=["Processing"])
 
 analyzer = SentimentAnalyzer()
-classifier = PostClassifier()
+classifier = ZeroShotClassifier()
 extractor = KeywordExtractor()
 scorer = SeverityScorer()
+
+POSITIVE_SENTIMENT_FLOOR = 0.15
 
 
 @router.post("/batch", response_model=BatchProcessResponse)
@@ -78,6 +82,12 @@ def process_batch(
 
         category, subcategory = classifier.classify(raw_post.title, raw_post.body, raw_post.flair)
         sentiment_score = analyzer.analyze(combined_text, category=category)
+
+        if category == "positive" and sentiment_score < POSITIVE_SENTIMENT_FLOOR:
+            category, subcategory = classifier.classify(
+                raw_post.title, raw_post.body, raw_post.flair, exclude={"positive"}
+            )
+
         keywords = extractor.extract(raw_post.title, raw_post.body)
         severity_score = scorer.score(
             sentiment_score=sentiment_score,
@@ -122,6 +132,34 @@ def process_batch(
         skipped_count=skipped,
         total_remaining=total_remaining or 0,
         results=results,
+    )
+
+
+@router.post("/analyze", response_model=AnalyzeResponse)
+def analyze_text(request: AnalyzeRequest):
+    """Run the NLP pipeline on a single text without storing anything."""
+    text = request.text.strip()
+
+    category, subcategory = classifier.classify("", text)
+    sentiment_score = analyzer.analyze(text, category=category)
+
+    if category == "positive" and sentiment_score < POSITIVE_SENTIMENT_FLOOR:
+        category, subcategory = classifier.classify("", text, exclude={"positive"})
+
+    keywords = extractor.extract("", text)
+    severity_score = scorer.score(
+        sentiment_score=sentiment_score,
+        post_score=0,
+        comment_count=0,
+        category=category,
+    )
+
+    return AnalyzeResponse(
+        category=category,
+        subcategory=subcategory,
+        sentiment_score=sentiment_score,
+        severity_score=severity_score,
+        keywords=keywords,
     )
 
 

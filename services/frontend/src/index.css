@@ -1,10 +1,12 @@
+@import url("https://fonts.googleapis.com/css2?family=Lato:wght@400;600;700;900&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   html {
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -15,20 +17,16 @@
   }
 
   body {
-    @apply text-[#111110] dark:text-[#F0F0EE];
+    @apply text-[#0B0B14];
     margin: 0;
     letter-spacing: -0.011em;
-    background-image: linear-gradient(135deg, #c8cfff 0%, #dde2ff 45%, #f0f2ff 100%);
+    background-image: linear-gradient(180deg, #8fa5f1 0%, #b9c4f3 45%, #dee4f4 100%);
     background-attachment: fixed;
     background-size: cover;
   }
 
-  html.dark body {
-    background-image: linear-gradient(135deg, #1a1b2e 0%, #14142b 45%, #0e0e22 100%);
-  }
-
   :root {
-    color-scheme: light dark;
+    color-scheme: light;
   }
 }
 

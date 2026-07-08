@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     default_subreddits: list[str] = ["EAFC", "FIFA"]
     default_fetch_limit: int = 100
     seed_data_path: str = "/app/data/seed_posts.json"
+    steam_app_id: int = 3405690
+    steam_user_agent: str = "Pulse/1.0 (Community Intelligence Platform)"
+    steam_min_review_length: int = 40
 
     model_config = {"env_file": ".env"}
 

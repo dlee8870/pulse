@@ -34,8 +34,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Pulse — Ingestion Service",
-    description="Ingests community posts from Reddit and seed data sources.",
+    title="Pulse Ingestion Service",
+    description="Ingests player reviews from Steam, plus seed and legacy Reddit sources.",
     version="1.0.0",
     lifespan=lifespan,
 )

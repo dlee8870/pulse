@@ -1,45 +1,41 @@
-export type SentimentTone = {
+const CATEGORY_COLORS: Record<string, string> = {
+  "gameplay-bug": "#EF5354",
+  "ui-bug": "#9379F4",
+  positive: "#83E7C5",
+  balance: "#F4C474",
+  "feature-request": "#97BAF4",
+  "server-issue": "#EF8355",
+  technical: "#6E7BF2",
+  monetization: "#82DEED",
+  market: "#82DEED",
+  other: "#A9B2D6",
+};
+
+export function categoryColor(category: string): string {
+  return CATEGORY_COLORS[category] ?? "#A9B2D6";
+}
+
+export function severityColor(value: number): string {
+  if (value >= 0.7) {
+    return "#EF5354";
+  }
+  if (value >= 0.45) {
+    return "#F1B958";
+  }
+  return "#97BAF4";
+}
+
+type SentimentTone = {
   bg: string;
   fg: string;
 };
 
-export function sentimentTone(value: number, isDark: boolean): SentimentTone {
-  if (value <= -0.6) {
-    return isDark
-      ? { bg: "rgba(220,38,38,0.18)", fg: "#FCA5A5" }
-      : { bg: "#FEF2F2", fg: "#B91C1C" };
+export function sentimentTone(value: number, _isDark = false): SentimentTone {
+  if (value <= -0.15) {
+    return { bg: "#FCE9EA", fg: "#C4494C" };
   }
-  if (value < 0) {
-    return isDark
-      ? { bg: "rgba(245,158,11,0.16)", fg: "#FCD34D" }
-      : { bg: "#FFFBEB", fg: "#B45309" };
+  if (value >= 0.15) {
+    return { bg: "#E2F7EE", fg: "#0E8F62" };
   }
-  return isDark
-    ? { bg: "rgba(16,185,129,0.16)", fg: "#6EE7B7" }
-    : { bg: "#ECFDF5", fg: "#047857" };
-}
-
-export function severityColor(value: number): string {
-  if (value >= 0.8) {
-    return "#DC2626";
-  }
-  if (value >= 0.6) {
-    return "#F59E0B";
-  }
-  return "#6366F1";
-}
-
-export const categoryColors: Record<string, string> = {
-  "gameplay-bug": "#DC2626",
-  "server-issue": "#EF4444",
-  balance: "#F59E0B",
-  "ui-bug": "#8B5CF6",
-  "feature-request": "#3B82F6",
-  market: "#06B6D4",
-  positive: "#10B981",
-  other: "#9CA3AF",
-};
-
-export function categoryColor(category: string): string {
-  return categoryColors[category] ?? "#9CA3AF";
+  return { bg: "rgba(255,255,255,0.7)", fg: "#5B679D" };
 }

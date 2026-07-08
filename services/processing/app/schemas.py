@@ -4,7 +4,7 @@ from typing import Any
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ProcessedPostResponse(BaseModel):
@@ -59,6 +59,22 @@ class BatchProcessResponse(BaseModel):
     skipped_count: int
     total_remaining: int
     results: list[ProcessedPostResponse]
+
+
+class AnalyzeRequest(BaseModel):
+    """Request body for analyzing a single piece of text without storing it."""
+
+    text: str = Field(min_length=10, max_length=5000)
+
+
+class AnalyzeResponse(BaseModel):
+    """NLP breakdown for an ad-hoc analyzed text."""
+
+    category: str
+    subcategory: str | None = None
+    sentiment_score: float
+    severity_score: float
+    keywords: list[str] = []
 
 
 class ProcessingStatusResponse(BaseModel):

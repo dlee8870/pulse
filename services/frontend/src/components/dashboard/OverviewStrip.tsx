@@ -15,27 +15,23 @@ function Tile({ label, value, sub, valueClassName = "" }: TileProps) {
   return (
     <div
       className={[
-        "bg-surface-light dark:bg-surface-dark",
-        "border-[0.5px] rounded-card",
-        "border-[rgba(0,0,0,0.09)] dark:border-[rgba(255,255,255,0.08)]",
-        "px-4 py-3.5",
+        "bg-surface-light",
+        "border border-white/50 rounded-container",
+        "shadow-[0_2px_16px_rgba(80,90,180,0.06)]",
+        "px-5 py-4",
       ].join(" ")}
     >
-      <p className="text-xs text-[#52524E] dark:text-[#9C9C98] m-0 mb-1.5">
-        {label}
-      </p>
+      <p className="text-[13px] text-muted-light m-0 mb-2">{label}</p>
       <p
         className={[
-          "font-mono tabular text-2xl font-medium m-0 tracking-tightest",
+          "tabular text-4xl font-bold m-0 tracking-tightest",
           valueClassName,
         ].join(" ")}
       >
         {value}
       </p>
       {sub ? (
-        <p className="text-[11px] text-[#8A8984] dark:text-[#6A6A66] mt-1.5">
-          {sub}
-        </p>
+        <p className="text-[12px] text-muted-light mt-2">{sub}</p>
       ) : null}
     </div>
   );
@@ -45,15 +41,14 @@ function TileSkeleton() {
   return (
     <div
       className={[
-        "bg-surface-light dark:bg-surface-dark",
-        "border-[0.5px] rounded-card",
-        "border-[rgba(0,0,0,0.09)] dark:border-[rgba(255,255,255,0.08)]",
-        "px-4 py-3.5",
+        "bg-surface-light",
+        "border border-white/50 rounded-container",
+        "px-5 py-4",
       ].join(" ")}
     >
-      <Skeleton className="h-3 w-20 mb-2" />
-      <Skeleton className="h-7 w-16 mb-2" />
-      <Skeleton className="h-2.5 w-24" />
+      <Skeleton className="h-3.5 w-24 mb-3" />
+      <Skeleton className="h-9 w-16 mb-3" />
+      <Skeleton className="h-3 w-28" />
     </div>
   );
 }
@@ -66,7 +61,7 @@ export function OverviewStrip() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
         <TileSkeleton />
         <TileSkeleton />
         <TileSkeleton />
@@ -92,15 +87,8 @@ export function OverviewStrip() {
     (issue: Issue) => issue.severity === "critical"
   ).length;
 
-  const sentimentColor =
-    avgSentiment < -0.3
-      ? "text-[#DC2626] dark:text-[#F87171]"
-      : avgSentiment > 0.3
-      ? "text-[#047857] dark:text-[#6EE7B7]"
-      : "";
-
-  const criticalColor =
-    criticalIssues > 0 ? "text-[#DC2626] dark:text-[#F87171]" : "";
+  const sentimentColor = avgSentiment < -0.3 ? "text-[#C4494C]" : avgSentiment > 0.3 ? "text-[#0E8F62]" : "";
+  const criticalColor = criticalIssues > 0 ? "text-[#C4494C]" : "";
 
   const statusParts: string[] = [];
   if (byStatus.open) {
@@ -114,11 +102,11 @@ export function OverviewStrip() {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
       <Tile
         label="Total posts"
         value={formatNumber(totalPosts)}
-        sub="Across r/EAFC and r/FIFA"
+        sub="EA SPORTS FC 26 Steam reviews"
       />
       <Tile
         label="Average sentiment"

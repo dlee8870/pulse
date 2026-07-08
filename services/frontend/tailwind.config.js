@@ -5,40 +5,52 @@ export default {
   theme: {
     extend: {
       colors: {
-        page: {
-          light: "#FAFAF9",
-          dark: "#0E0E11",
-        },
         surface: {
-          light: "#FFFFFF",
+          light: "rgba(255,255,255,0.45)",
           dark: "#18181C",
         },
+        raised: {
+          light: "rgba(255,255,255,0.72)",
+          dark: "#222226",
+        },
         track: {
-          light: "#EEEEEC",
+          light: "rgba(255,255,255,0.65)",
           dark: "#222226",
         },
         hover: {
-          light: "#F4F4F3",
+          light: "rgba(255,255,255,0.55)",
           dark: "#222226",
         },
+        page: {
+          light: "rgba(255,255,255,0.30)",
+          dark: "#0E0E11",
+        },
         accent: {
-          light: "#5B5FE5",
+          light: "#5D63F9",
           dark: "#818CF8",
         },
+        ink: {
+          DEFAULT: "#0B0B14",
+          soft: "#3C4468",
+        },
         muted: {
-          light: "#6B6FB8",
+          light: "#5B679D",
           dark: "#9C9CB8",
+        },
+        faint: {
+          light: "#8A93BE",
+          dark: "#6A6A66",
         },
       },
       backgroundImage: {
         "page-gradient-light":
-          "linear-gradient(135deg, #C8CFFF 0%, #DDE2FF 45%, #F0F2FF 100%)",
+          "linear-gradient(180deg, #8FA5F1 0%, #B9C4F3 45%, #DEE4F4 100%)",
         "page-gradient-dark":
           "linear-gradient(135deg, #1A1B2E 0%, #14142B 45%, #0E0E22 100%)",
       },
       fontFamily: {
         sans: [
-          "Inter",
+          "Lato",
           "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",
@@ -57,8 +69,8 @@ export default {
         tightest: "-0.02em",
       },
       borderRadius: {
-        card: "8px",
-        container: "10px",
+        card: "16px",
+        container: "20px",
       },
     },
   },

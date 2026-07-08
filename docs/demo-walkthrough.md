@@ -18,7 +18,7 @@ http://localhost:8000/docs
 
 Talk through the flow in one sentence:
 
-> Reddit posts come in through ingestion, get classified and scored by processing, get aggregated by analytics, become tracked issues in the issue service, and all of it is exposed through a JWT-protected API gateway.
+> Steam reviews come in through ingestion, get classified and scored by processing, get aggregated by analytics, become tracked issues in the issue service, and all of it is exposed through a JWT-protected API gateway.
 
 ## 3. Show authentication
 
@@ -48,7 +48,7 @@ Bearer <token>
 Run these in order:
 
 ```text
-POST /api/ingest/seed
+POST /api/ingest/steam
 POST /api/process/batch
 POST /api/issues/auto-generate
 GET  /api/trends/overview
@@ -57,8 +57,10 @@ GET  /api/issues?page=1&page_size=5
 ```
 
 Points to emphasize:
-- ingestion is idempotent because duplicate seed posts are tracked
+- ingestion pulls live EA SPORTS FC 26 reviews from Steam's public endpoint, no API key needed
+- ingestion is idempotent because duplicate reviews are tracked by source id
 - processing is idempotent because already-processed posts are skipped
+- category comes from zero-shot classification, so the pipeline reads meaning rather than matching keywords
 - issue generation clusters unlinked processed posts
 - rankings use severity, sentiment, and volume together
 
@@ -75,6 +77,7 @@ If you want a repeatable demo without clicking through Swagger:
 Key points:
 - multi-service architecture
 - Python and Java in one project
+- real live data source with an NLP pipeline tuned against real misclassifications
 - shared PostgreSQL data model
 - authentication and rate limiting at the gateway
 - enough documentation and tooling for someone else to run it

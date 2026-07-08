@@ -3,9 +3,6 @@ import { AxiosError } from "axios";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth/useAuth";
 import { Logo } from "@/components/ui/Logo";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import type { ApiError } from "@/types/api";
 
 type LocationState = {
@@ -33,6 +30,15 @@ function extractErrorMessage(err: unknown): string {
   return "Sign in failed. Please try again.";
 }
 
+const inputClasses = [
+  "w-full rounded-xl px-3.5 py-3",
+  "text-[14px]",
+  "bg-[#F6F6F6]",
+  "border border-white/70",
+  "text-ink placeholder:text-faint-light",
+  "outline-none focus:ring-2 focus:ring-accent-light/40",
+].join(" ");
+
 export function LoginPage() {
   const { user, login } = useAuth();
   const location = useLocation();
@@ -43,7 +49,12 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   if (user) {
-    return <Navigate to={(location.state as LocationState | null)?.from?.pathname ?? "/dashboard"} replace />;
+    return (
+      <Navigate
+        to={(location.state as LocationState | null)?.from?.pathname ?? "/dashboard"}
+        replace
+      />
+    );
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -62,82 +73,89 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="absolute top-5 right-5">
-        <ThemeToggle />
-      </div>
+    <div className="min-h-screen flex items-center justify-center px-5">
+      <div
+        className={[
+          "w-full max-w-md",
+          "bg-surface-light backdrop-blur-sm",
+          "border border-white/50 rounded-[24px]",
+          "shadow-[0_8px_40px_rgba(80,90,180,0.12)]",
+          "px-8 py-9",
+        ].join(" ")}
+      >
+        <div className="flex items-center gap-2.5 mb-7">
+          <Logo size={22} />
+          <span className="text-[17px] font-bold tracking-tightish">Pulse</span>
+        </div>
 
-      <div className="min-h-screen flex items-center justify-center px-5">
-        <div
-          className={[
-            "w-full max-w-sm",
-            "bg-surface-light/95 dark:bg-surface-dark/95",
-            "backdrop-blur-sm",
-            "border-[0.5px] rounded-container",
-            "border-[rgba(0,0,0,0.06)] dark:border-[rgba(255,255,255,0.06)]",
-            "shadow-[0_2px_12px_rgba(91,95,229,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.3)]",
-            "p-7",
-          ].join(" ")}
-        >
-          <div className="flex items-center gap-2.5 mb-5">
-            <Logo size={20} />
-            <span className="text-sm font-medium tracking-tightish">
-              Pulse
-            </span>
-          </div>
+        <h1 className="text-[26px] font-bold m-0 mb-1.5 tracking-tightish">
+          Sign in
+        </h1>
+        <p className="text-[14px] text-muted-light mb-7">
+          Access the community intelligence dashboard.
+        </p>
 
-          <h1 className="text-base font-medium mb-1 tracking-tightish">
-            Sign in
-          </h1>
-          <p className="text-xs text-[#6B6FB8] dark:text-[#9C9CB8] mb-6">
-            Access the community intelligence dashboard.
-          </p>
-
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <Input
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <div>
+            <label
+              htmlFor="username"
+              className="block text-[14px] text-muted-light mb-2"
+            >
+              Username
+            </label>
+            <input
               id="username"
-              label="Username"
               type="text"
               autoComplete="username"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
               required
               autoFocus
+              className={inputClasses}
             />
-            <Input
+          </div>
+
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-[14px] text-muted-light mb-2"
+            >
+              Password
+            </label>
+            <input
               id="password"
-              label="Password"
               type="password"
               autoComplete="current-password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
+              className={inputClasses}
             />
+          </div>
 
-            {error ? (
-              <p className="text-xs text-[#B91C1C] dark:text-[#FCA5A5] -mt-1">
-                {error}
-              </p>
-            ) : null}
+          {error ? (
+            <p className="text-xs text-[#C4494C] -mt-2 m-0">{error}</p>
+          ) : null}
 
-            <Button
-              type="submit"
-              disabled={submitting || !username || !password}
-              className="w-full mt-1"
-            >
-              {submitting ? "Signing in" : "Sign in"}
-            </Button>
-          </form>
-
-          <div
+          <button
+            type="submit"
+            disabled={submitting || !username || !password}
             className={[
-              "mt-5 pt-4",
-              "border-t-[0.5px] border-[rgba(0,0,0,0.05)] dark:border-[rgba(255,255,255,0.04)]",
-              "text-[11px] text-[#8A8984] dark:text-[#6A6A66] text-center",
+              "w-full mt-1 py-3 rounded-xl",
+              "bg-accent-light text-white",
+              "text-[15px] font-semibold",
+              "transition-opacity",
+              "hover:opacity-90",
+              "disabled:opacity-50 disabled:cursor-not-allowed",
+              "outline-none focus:ring-2 focus:ring-accent-light/40",
             ].join(" ")}
           >
-            Demo credentials: pulse_admin / pulse_admin
-          </div>
+            {submitting ? "Signing in" : "Sign in"}
+          </button>
+        </form>
+
+        <div className="mt-7 pt-5 border-t border-white/60 text-[13px] text-muted-light text-center">
+          Demo credential: pulse_admin / pulse_admin
         </div>
       </div>
     </div>

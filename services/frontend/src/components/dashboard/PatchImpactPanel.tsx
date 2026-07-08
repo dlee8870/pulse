@@ -4,12 +4,45 @@ import { EmptyState, ErrorState, Skeleton } from "@/components/ui/States";
 import { usePatchImpact, usePatches } from "@/hooks/useDashboardData";
 import type { PatchPeriodMetrics } from "@/types/api";
 import {
-  formatIsoDate,
   formatNumber,
   formatSentiment,
   formatSeverity,
-  formatShortDate,
 } from "@/lib/format";
+
+function formatDateOnly(value: string): string {
+  const datePart = value.slice(0, 10);
+  const [year, month, day] = datePart.split("-").map(Number);
+  if (!year || !month || !day) {
+    return value;
+  }
+  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: undefined,
+  });
+}
+
+function formatDateWithYear(value: string): string {
+  const datePart = value.slice(0, 10);
+  const [year, month, day] = datePart.split("-").map(Number);
+  if (!year || !month || !day) {
+    return value;
+  }
+  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function shiftDate(value: string, days: number): string {
+  const datePart = value.slice(0, 10);
+  const [year, month, day] = datePart.split("-").map(Number);
+  const shifted = new Date(year, month - 1, day + days);
+  const mm = String(shifted.getMonth() + 1).padStart(2, "0");
+  const dd = String(shifted.getDate()).padStart(2, "0");
+  return `${shifted.getFullYear()}-${mm}-${dd}`;
+}
 
 type DeltaProps = {
   label: string;
@@ -27,26 +60,27 @@ function Delta({
   showPercent = false,
 }: DeltaProps) {
   if (value === 0) {
-    return <span className="text-[11px] ml-1.5 text-[#8A8984] dark:text-[#6A6A66]">±0</span>;
+    return <span className="text-[12px] ml-1.5 text-faint-light">±0</span>;
   }
   const isPositive = value > 0;
   const isGood = positiveIsGood ? isPositive : !isPositive;
-  const color = isGood
-    ? "text-[#047857] dark:text-[#6EE7B7]"
-    : "text-[#B91C1C] dark:text-[#FCA5A5]";
+  const color = isGood ? "text-[#0E8F62]" : "text-[#C4494C]";
   const arrow = isPositive ? "↑" : "↓";
   const display = showPercent
     ? `${formatter(Math.abs(value))}%`
     : formatter(Math.abs(value));
 
   return (
-    <span className={["text-[11px] ml-1.5", color].join(" ")} aria-label={label}>
+    <span
+      className={["text-[12px] ml-1.5 font-semibold", color].join(" ")}
+      aria-label={label}
+    >
       {arrow} {display}
     </span>
   );
 }
 
-type PeriodCardProps = {
+type PeriodBlockProps = {
   title: string;
   start: string;
   end: string;
@@ -54,31 +88,29 @@ type PeriodCardProps = {
   compare?: PatchPeriodMetrics;
 };
 
-function PeriodCard({ title, start, end, metrics, compare }: PeriodCardProps) {
-  const sentimentChange = compare ? metrics.avgSentiment - compare.avgSentiment : 0;
-  const severityChange = compare ? metrics.avgSeverity - compare.avgSeverity : 0;
+function PeriodBlock({ title, start, end, metrics, compare }: PeriodBlockProps) {
+  const sentimentChange = compare
+    ? metrics.avgSentiment - compare.avgSentiment
+    : 0;
+  const severityChange = compare
+    ? metrics.avgSeverity - compare.avgSeverity
+    : 0;
   const postsChangePercent =
     compare && compare.postCount > 0
       ? ((metrics.postCount - compare.postCount) / compare.postCount) * 100
       : 0;
 
   return (
-    <div
-      className={[
-        "bg-page-light dark:bg-page-dark",
-        "border-[0.5px] rounded-md px-3.5 py-3",
-        "border-[rgba(0,0,0,0.05)] dark:border-[rgba(255,255,255,0.04)]",
-      ].join(" ")}
-    >
-      <div className="flex items-baseline justify-between mb-2.5">
-        <span className="text-xs font-medium">{title}</span>
-        <span className="font-mono text-[11px] text-[#8A8984] dark:text-[#6A6A66]">
-          {formatShortDate(start)} — {formatShortDate(end)}
+    <div className="py-1">
+      <div className="flex items-baseline justify-between mb-2">
+        <span className="text-[15px] font-bold text-ink">{title}</span>
+        <span className="text-[12px] text-muted-light">
+          {formatDateOnly(start)} — {formatDateOnly(end)}
         </span>
       </div>
-      <div className="flex justify-between items-baseline py-1 text-xs">
-        <span className="text-[#52524E] dark:text-[#9C9C98]">Posts</span>
-        <span className="font-mono tabular font-medium">
+      <div className="flex justify-between items-baseline py-1.5 text-[13px]">
+        <span className="text-muted-light">Posts</span>
+        <span className="tabular font-semibold text-ink">
           {formatNumber(metrics.postCount)}
           {compare ? (
             <Delta
@@ -91,9 +123,9 @@ function PeriodCard({ title, start, end, metrics, compare }: PeriodCardProps) {
           ) : null}
         </span>
       </div>
-      <div className="flex justify-between items-baseline py-1 text-xs">
-        <span className="text-[#52524E] dark:text-[#9C9C98]">Avg sentiment</span>
-        <span className="font-mono tabular font-medium">
+      <div className="flex justify-between items-baseline py-1.5 text-[13px]">
+        <span className="text-muted-light">Avg sentiment</span>
+        <span className="tabular font-semibold text-ink">
           {formatSentiment(metrics.avgSentiment)}
           {compare ? (
             <Delta
@@ -105,9 +137,9 @@ function PeriodCard({ title, start, end, metrics, compare }: PeriodCardProps) {
           ) : null}
         </span>
       </div>
-      <div className="flex justify-between items-baseline py-1 text-xs">
-        <span className="text-[#52524E] dark:text-[#9C9C98]">Avg severity</span>
-        <span className="font-mono tabular font-medium">
+      <div className="flex justify-between items-baseline py-1.5 text-[13px]">
+        <span className="text-muted-light">Avg severity</span>
+        <span className="tabular font-semibold text-ink">
           {formatSeverity(metrics.avgSeverity)}
           {compare ? (
             <Delta
@@ -127,14 +159,6 @@ export function PatchImpactPanel() {
   const patches = usePatches();
   const [selectedPatchId, setSelectedPatchId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!selectedPatchId && patches.data && patches.data.length > 0) {
-      setSelectedPatchId(patches.data[0].id);
-    }
-  }, [patches.data, selectedPatchId]);
-
-  const impact = usePatchImpact(selectedPatchId);
-
   const sortedPatches = patches.data
     ? [...patches.data].sort(
         (a, b) =>
@@ -142,15 +166,19 @@ export function PatchImpactPanel() {
       )
     : [];
 
-  const releaseDate = impact.data?.patch.releaseDate;
-  const preStart = releaseDate
-    ? new Date(new Date(releaseDate).getTime() - 7 * 86400000).toISOString()
-    : "";
-  const preEnd = releaseDate ?? "";
-  const postStart = releaseDate ?? "";
-  const postEnd = releaseDate
-    ? new Date(new Date(releaseDate).getTime() + 7 * 86400000).toISOString()
-    : "";
+  useEffect(() => {
+    if (!selectedPatchId && sortedPatches.length > 0) {
+      setSelectedPatchId(sortedPatches[0].id);
+    }
+  }, [sortedPatches, selectedPatchId]);
+
+  const impact = usePatchImpact(selectedPatchId);
+
+  const releaseDate = impact.data?.patch.releaseDate ?? "";
+  const preStart = releaseDate ? shiftDate(releaseDate, -7) : "";
+  const preEnd = releaseDate;
+  const postStart = releaseDate;
+  const postEnd = releaseDate ? shiftDate(releaseDate, 7) : "";
 
   const selectRight = (
     <select
@@ -158,11 +186,11 @@ export function PatchImpactPanel() {
       onChange={(event) => setSelectedPatchId(event.target.value)}
       disabled={patches.isLoading || sortedPatches.length === 0}
       className={[
-        "text-xs px-2.5 py-1.5 rounded-md",
-        "bg-surface-light dark:bg-surface-dark",
-        "text-[#111110] dark:text-[#F0F0EE]",
-        "border-[0.5px] border-[rgba(0,0,0,0.09)] dark:border-[rgba(255,255,255,0.08)]",
-        "focus:outline-none focus:ring-2 focus:ring-accent-light/30 dark:focus:ring-accent-dark/30",
+        "text-[13px] px-3 py-2 rounded-lg",
+        "bg-white/70",
+        "text-ink font-semibold",
+        "border border-white/60",
+        "focus:outline-none focus:ring-2 focus:ring-accent-light/30",
         "disabled:opacity-60 disabled:cursor-not-allowed",
       ].join(" ")}
     >
@@ -171,7 +199,7 @@ export function PatchImpactPanel() {
       ) : (
         sortedPatches.map((patch) => (
           <option key={patch.id} value={patch.id}>
-            {patch.version} — {formatIsoDate(patch.releaseDate)}
+            {patch.version} — {formatDateWithYear(patch.releaseDate)}
           </option>
         ))
       )}
@@ -187,7 +215,7 @@ export function PatchImpactPanel() {
       />
 
       {patches.isLoading ? (
-        <div className="px-4 pb-4 pt-1">
+        <div className="px-5 pb-5 pt-1">
           <Skeleton className="h-32" />
         </div>
       ) : patches.isError ? (
@@ -201,9 +229,9 @@ export function PatchImpactPanel() {
           hint="Register a patch via POST /api/patches to see impact analysis."
         />
       ) : impact.isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 px-4 pb-4 pt-1.5">
-          <Skeleton className="h-36" />
-          <Skeleton className="h-36" />
+        <div className="px-5 pb-5 pt-1 space-y-3">
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
         </div>
       ) : impact.isError ? (
         <ErrorState
@@ -211,14 +239,15 @@ export function PatchImpactPanel() {
           onRetry={() => impact.refetch()}
         />
       ) : impact.data ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 px-4 pb-4 pt-1.5">
-          <PeriodCard
+        <div className="px-5 pb-5 pt-1">
+          <PeriodBlock
             title="Before"
             start={preStart}
             end={preEnd}
             metrics={impact.data.prePatch}
           />
-          <PeriodCard
+          <div className="border-t border-white/60 my-2.5" />
+          <PeriodBlock
             title="After"
             start={postStart}
             end={postEnd}

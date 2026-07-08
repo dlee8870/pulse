@@ -6,6 +6,7 @@ import {
   fetchTrendsOverview,
 } from "@/api/analytics";
 import { fetchIssuePosts, fetchIssues } from "@/api/issues";
+import { fetchProcessedPosts } from "@/api/processing";
 
 export function useTrendsOverview() {
   return useQuery({
@@ -33,6 +34,17 @@ export function useIssuePosts(issueId: string | null) {
     queryKey: ["issues", "posts", issueId],
     queryFn: () => fetchIssuePosts(issueId as string),
     enabled: Boolean(issueId),
+  });
+}
+
+export function useCategoryPosts(
+  category: string | null,
+  subcategory?: string | null
+) {
+  return useQuery({
+    queryKey: ["processed", "category", category, subcategory ?? null],
+    queryFn: () => fetchProcessedPosts(category as string, subcategory ?? null),
+    enabled: Boolean(category),
   });
 }
 

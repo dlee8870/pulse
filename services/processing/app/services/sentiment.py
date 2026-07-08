@@ -7,7 +7,16 @@ from transformers import pipeline
 
 logger = logging.getLogger(__name__)
 
+CENSOR_PATTERN = re.compile("[\u2665\u2764]{2,}")
+
+
+def normalize_censored_text(text: str) -> str:
+    """Replace Steam's heart-censored profanity with a mild swear so models read it as negative."""
+    return CENSOR_PATTERN.sub("crap", text)
+
 SARCASM_PATTERNS = [
+    r"\b0+/10\b",
+    r"\b1/10\b",
     r"literally perfect",
     r"absurdly perfect",
     r"perfectly\b.*\bunfair",
@@ -21,6 +30,8 @@ NEGATIVE_CONTEXT_PHRASES = [
     "frustrating", "useless", "clueless", "dead", "unfair", "ridiculous",
     "absurd", "needs to change", "needs a complete", "needs to be fixed",
     "how is there still", "still a thing", "wrong fix", "completely broken",
+    "scam", "horrible", "trash", "garbage", "disappointing", "waste of",
+    "never work", "never works", "doesn't work", "does not work",
 ]
 
 
@@ -62,6 +73,8 @@ class SentimentAnalyzer:
         if not text or not text.strip():
             return 0.0
 
+        text = normalize_censored_text(text)
+
         results = self._pipeline(text[:512])[0]
 
         scores_by_label = {}
@@ -86,10 +99,7 @@ class SentimentAnalyzer:
             if sentiment > 0:
                 sentiment = -sentiment * 0.6
 
-        if category == "positive" and sentiment < 0:
-            sentiment = abs(sentiment) * 0.5
-
-        if category in ("gameplay-bug", "ui-bug", "server-issue") and sentiment > 0.3:
+        if category in ("gameplay-bug", "ui-bug", "server-issue", "technical", "monetization") and sentiment > 0.3:
             if negative_count >= 1:
                 sentiment = -0.2 * min(1.0, negative_count / 3)
 

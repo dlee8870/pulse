@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/States";
 import { useTrendsOverview } from "@/hooks/useDashboardData";
+import { CategoryPostsModal } from "@/components/dashboard/CategoryPostsModal";
 import { categoryColor } from "@/lib/tone";
 import { formatCategoryLabel } from "@/lib/format";
 
@@ -13,6 +14,7 @@ type Aggregate = {
 
 export function CategoryBreakdown() {
   const { data, isLoading, isError, refetch } = useTrendsOverview();
+  const [selected, setSelected] = useState<string | null>(null);
 
   const aggregates = useMemo<Aggregate[]>(() => {
     if (!data) {
@@ -42,55 +44,72 @@ export function CategoryBreakdown() {
   }, [data]);
 
   return (
-    <Card>
-      <CardHeader
-        title="Categories"
-        subtitle="Share of all processed feedback"
-      />
-
-      {isLoading ? (
-        <div className="px-4 pb-4 pt-1 space-y-2.5">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="flex items-center gap-2.5">
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-2 flex-1" />
-              <Skeleton className="h-3 w-8" />
-            </div>
-          ))}
-        </div>
-      ) : isError ? (
-        <ErrorState
-          message="Could not load categories."
-          onRetry={() => refetch()}
+    <>
+      <Card>
+        <CardHeader
+          title="Categories"
+          subtitle="Share of all processed feedback"
         />
-      ) : aggregates.length === 0 ? (
-        <EmptyState message="No processed posts yet." />
-      ) : (
-        <div className="px-4 pb-4 pt-1">
-          {aggregates.map((item) => (
-            <div
-              key={item.category}
-              className="grid grid-cols-[120px_1fr_40px] items-center gap-2.5 text-xs mb-2.5 last:mb-0"
-            >
-              <span className="text-[#111110] dark:text-[#F0F0EE]">
-                {formatCategoryLabel(item.category)}
-              </span>
-              <div className="h-2 rounded-[4px] bg-track-light dark:bg-track-dark overflow-hidden">
-                <div
-                  className="h-full rounded-[4px]"
-                  style={{
-                    width: `${Math.round(item.share)}%`,
-                    background: categoryColor(item.category),
-                  }}
-                />
+
+        {isLoading ? (
+          <div className="px-5 pb-5 pt-1 space-y-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="flex items-center gap-3">
+                <Skeleton className="h-3.5 w-24" />
+                <Skeleton className="h-2 flex-1" />
+                <Skeleton className="h-3.5 w-10" />
               </div>
-              <span className="font-mono tabular text-xs text-[#52524E] dark:text-[#9C9C98] text-right">
-                {item.share.toFixed(1)}%
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-    </Card>
+            ))}
+          </div>
+        ) : isError ? (
+          <ErrorState
+            message="Could not load categories."
+            onRetry={() => refetch()}
+          />
+        ) : aggregates.length === 0 ? (
+          <EmptyState message="No processed posts yet." />
+        ) : (
+          <div className="px-5 pb-5 pt-1">
+            {aggregates.map((item) => (
+              <button
+                type="button"
+                key={item.category}
+                onClick={() => setSelected(item.category)}
+                aria-label={`View ${formatCategoryLabel(item.category)} reviews`}
+                className={[
+                  "w-full grid grid-cols-[130px_1fr_48px] items-center gap-3",
+                  "text-[13px] mb-1.5 last:mb-0 text-left",
+                  "rounded-lg px-1.5 py-1.5 -mx-1.5",
+                  "hover:bg-white/50 transition-colors",
+                  "outline-none focus:ring-2 focus:ring-accent-light/30",
+                ].join(" ")}
+              >
+                <span className="text-ink font-semibold truncate">
+                  {formatCategoryLabel(item.category)}
+                </span>
+                <div className="h-[7px] rounded-full bg-white/70 overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${Math.round(item.share)}%`,
+                      background: categoryColor(item.category),
+                    }}
+                  />
+                </div>
+                <span className="tabular text-[13px] text-muted-light text-right">
+                  {item.share.toFixed(1)}%
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <CategoryPostsModal
+        category={selected}
+        subcategory={null}
+        onClose={() => setSelected(null)}
+      />
+    </>
   );
 }

@@ -1,4 +1,4 @@
-"""Endpoints for ingesting data from Reddit and seed files."""
+"""Endpoints for ingesting data from Reddit, Steam, and seed files."""
 
 import json
 import logging
@@ -16,9 +16,11 @@ from app.schemas import (
     IngestRedditRequest,
     IngestSeedRequest,
     IngestStatusResponse,
+    IngestSteamRequest,
     IngestionLogResponse,
 )
 from app.services.reddit_client import RedditClient
+from app.services.steam_client import SteamClient
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +102,73 @@ def trigger_reddit_ingestion(
         db.commit()
         logger.error("Reddit ingestion failed: %s", e)
         raise HTTPException(status_code=500, detail=f"Ingestion failed: {e}") from e
+
+
+@router.post("/steam", response_model=IngestionLogResponse)
+def trigger_steam_ingestion(
+    request: IngestSteamRequest,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+):
+    """Fetch reviews from Steam and store new ones in the database."""
+    client = SteamClient(
+        user_agent=settings.steam_user_agent,
+        min_review_length=settings.steam_min_review_length,
+    )
+
+    log = IngestionLog(source="steam", subreddit=f"app_{request.app_id}")
+    db.add(log)
+    db.commit()
+
+    try:
+        reviews = client.fetch_reviews(
+            app_id=request.app_id,
+            limit=request.limit,
+            language=request.language,
+        )
+        total_fetched = len(reviews)
+        total_new = 0
+        total_duplicate = 0
+
+        for post_data in reviews:
+            existing = (
+                db.query(RawPost)
+                .filter(RawPost.source_id == post_data["source_id"])
+                .first()
+            )
+            if existing:
+                total_duplicate += 1
+                continue
+
+            raw_post = RawPost(**post_data)
+            db.add(raw_post)
+            total_new += 1
+
+        db.commit()
+
+        log.posts_fetched = total_fetched
+        log.posts_new = total_new
+        log.posts_duplicate = total_duplicate
+        log.status = "completed"
+        log.completed_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(log)
+
+        logger.info(
+            "Steam ingestion completed: %d fetched, %d new, %d duplicates",
+            total_fetched,
+            total_new,
+            total_duplicate,
+        )
+        return log
+
+    except Exception as e:
+        log.status = "failed"
+        log.error_message = str(e)
+        log.completed_at = datetime.now(timezone.utc)
+        db.commit()
+        logger.error("Steam ingestion failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"Steam ingestion failed: {e}") from e
 
 
 @router.post("/seed", response_model=IngestionLogResponse)

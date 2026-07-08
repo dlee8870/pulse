@@ -1,22 +1,22 @@
-"""Severity scoring that combines sentiment, engagement, category, and comment ratio."""
+"""Severity scoring driven by sentiment intensity, weighted by category, with engagement as a bonus."""
 
 import math
 
 
 class SeverityScorer:
-    """Produces a 0.0 to 1.0 urgency score from multiple weighted signals."""
+    """Produces a 0.0 to 1.0 urgency score for a single post."""
 
-    def __init__(
-        self,
-        sentiment_weight: float = 0.30,
-        engagement_weight: float = 0.35,
-        keyword_weight: float = 0.20,
-        volume_weight: float = 0.15,
-    ):
-        self.sentiment_weight = sentiment_weight
-        self.engagement_weight = engagement_weight
-        self.keyword_weight = keyword_weight
-        self.volume_weight = volume_weight
+    CATEGORY_MULTIPLIERS = {
+        "gameplay-bug": 0.9,
+        "server-issue": 0.85,
+        "technical": 0.85,
+        "balance": 0.7,
+        "monetization": 0.55,
+        "ui-bug": 0.6,
+        "market": 0.5,
+        "feature-request": 0.4,
+        "other": 0.3,
+    }
 
     def score(
         self,
@@ -30,29 +30,11 @@ class SeverityScorer:
             return round(max(0.0, 0.05 + abs(sentiment_score) * 0.1), 3)
 
         sentiment_severity = abs(min(0.0, sentiment_score))
+        category_severity = self.CATEGORY_MULTIPLIERS.get(category, 0.4)
 
         engagement_raw = post_score + (comment_count * 2)
-        engagement_severity = min(1.0, math.log1p(engagement_raw) / math.log1p(10000))
+        engagement_bonus = min(0.1, math.log1p(engagement_raw) / math.log1p(500) * 0.1)
 
-        category_multipliers = {
-            "gameplay-bug": 0.9,
-            "server-issue": 0.85,
-            "balance": 0.7,
-            "ui-bug": 0.6,
-            "market": 0.5,
-            "feature-request": 0.4,
-            "other": 0.3,
-        }
-        category_severity = category_multipliers.get(category, 0.4)
-
-        comment_ratio = min(1.0, comment_count / max(1, post_score)) if post_score > 0 else 0.5
-        volume_severity = min(1.0, comment_ratio * 1.5)
-
-        raw_score = (
-            self.sentiment_weight * sentiment_severity
-            + self.engagement_weight * engagement_severity
-            + self.keyword_weight * category_severity
-            + self.volume_weight * volume_severity
-        )
+        raw_score = sentiment_severity * (0.7 + 0.3 * category_severity) + engagement_bonus
 
         return round(min(1.0, max(0.0, raw_score)), 3)

@@ -1,17 +1,17 @@
 import { useMemo, useState } from "react";
-import { useIssuesSummary, useRankings } from "@/hooks/useDashboardData";
+import { useRankings } from "@/hooks/useDashboardData";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { SeverityBar } from "@/components/ui/SeverityBar";
 import { SentimentPill } from "@/components/ui/SentimentPill";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/States";
-import { IssuePostsModal } from "@/components/dashboard/IssuePostsModal";
+import { CategoryPostsModal } from "@/components/dashboard/CategoryPostsModal";
 import {
   categoryGroup,
   formatCategoryLabel,
   formatNumber,
   formatSubcategoryLabel,
 } from "@/lib/format";
-import type { Issue, RankingEntry } from "@/types/api";
+import type { RankingEntry } from "@/types/api";
 
 type FilterKey = "all" | "bug" | "balance" | "ui";
 
@@ -22,9 +22,7 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "ui", label: "UI" },
 ];
 
-type SelectedIssue = {
-  id: string;
-  title: string;
+type Selected = {
   category: string;
   subcategory: string | null;
 };
@@ -40,9 +38,9 @@ function FilterTabs({
     <div
       className={[
         "inline-flex gap-0.5 p-0.5",
-        "bg-track-light dark:bg-track-dark",
-        "rounded-md",
-        "border-[0.5px] border-[rgba(0,0,0,0.09)] dark:border-[rgba(255,255,255,0.08)]",
+        "bg-white/50",
+        "rounded-lg",
+        "border border-white/60",
       ].join(" ")}
     >
       {FILTERS.map((filter) => (
@@ -51,10 +49,10 @@ function FilterTabs({
           type="button"
           onClick={() => onChange(filter.key)}
           className={[
-            "text-[11px] px-2.5 py-[3px] rounded font-medium transition-colors",
+            "text-[12px] px-3 py-1 rounded-md font-semibold transition-colors",
             active === filter.key
-              ? "bg-surface-light dark:bg-surface-dark text-[#111110] dark:text-[#F0F0EE] border-[0.5px] border-[rgba(0,0,0,0.09)] dark:border-[rgba(255,255,255,0.08)]"
-              : "text-[#52524E] dark:text-[#9C9C98]",
+              ? "bg-white text-ink shadow-[0_1px_4px_rgba(80,90,180,0.10)]"
+              : "text-muted-light",
           ].join(" ")}
         >
           {filter.label}
@@ -66,37 +64,32 @@ function FilterTabs({
 
 function TableSkeleton() {
   return (
-    <div className="px-4 py-3 space-y-3">
+    <div className="px-5 py-4 space-y-3.5">
       {Array.from({ length: 5 }).map((_, index) => (
         <div key={index} className="flex items-center gap-3">
-          <Skeleton className="h-3 w-5" />
-          <Skeleton className="h-3 flex-1" />
-          <Skeleton className="h-3 w-8" />
-          <Skeleton className="h-3 w-24" />
-          <Skeleton className="h-3 w-10" />
+          <Skeleton className="h-3.5 w-6" />
+          <Skeleton className="h-3.5 flex-1" />
+          <Skeleton className="h-3.5 w-8" />
+          <Skeleton className="h-3.5 w-24" />
+          <Skeleton className="h-3.5 w-12" />
         </div>
       ))}
     </div>
   );
 }
 
-function findMatchingIssue(
-  row: RankingEntry,
-  issues: Issue[]
-): Issue | undefined {
-  return issues.find(
-    (issue) =>
-      issue.category === row.category && issue.subcategory === row.subcategory
-  );
-}
+const headerCell = [
+  "text-[12px] font-semibold",
+  "text-muted-light",
+  "px-5 py-2",
+  "border-t border-b border-white/50",
+  "bg-white/40",
+].join(" ");
 
 export function TopIssuesTable() {
   const [filter, setFilter] = useState<FilterKey>("all");
-  const [selected, setSelected] = useState<SelectedIssue | null>(null);
+  const [selected, setSelected] = useState<Selected | null>(null);
   const { data, isLoading, isError, refetch } = useRankings();
-  const { data: issuesData } = useIssuesSummary();
-
-  const issues: Issue[] = issuesData?.items ?? [];
 
   const filtered = useMemo(() => {
     if (!data) {
@@ -109,16 +102,7 @@ export function TopIssuesTable() {
   }, [data, filter]);
 
   function handleRowClick(row: RankingEntry) {
-    const match = findMatchingIssue(row, issues);
-    if (!match) {
-      return;
-    }
-    setSelected({
-      id: match.id,
-      title: match.title,
-      category: match.category,
-      subcategory: match.subcategory,
-    });
+    setSelected({ category: row.category, subcategory: row.subcategory });
   }
 
   return (
@@ -140,153 +124,90 @@ export function TopIssuesTable() {
         ) : filtered.length === 0 ? (
           <EmptyState
             message="No issues match this filter."
-            hint="Try the All tab or seed more data."
+            hint="Try the All tab."
           />
         ) : (
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th
-                  className={[
-                    "w-6 text-left text-[11px] font-medium",
-                    "text-[#8A8984] dark:text-[#6A6A66]",
-                    "px-4 py-1.5",
-                    "border-t-[0.5px] border-b-[0.5px]",
-                    "border-[rgba(0,0,0,0.09)] dark:border-[rgba(255,255,255,0.08)]",
-                    "bg-page-light dark:bg-page-dark",
-                  ].join(" ")}
-                />
-                <th
-                  className={[
-                    "text-left text-[11px] font-medium",
-                    "text-[#8A8984] dark:text-[#6A6A66]",
-                    "px-4 py-1.5",
-                    "border-t-[0.5px] border-b-[0.5px]",
-                    "border-[rgba(0,0,0,0.09)] dark:border-[rgba(255,255,255,0.08)]",
-                    "bg-page-light dark:bg-page-dark",
-                  ].join(" ")}
-                >
-                  Issue
-                </th>
-                <th
-                  className={[
-                    "text-right text-[11px] font-medium",
-                    "text-[#8A8984] dark:text-[#6A6A66]",
-                    "px-4 py-1.5 w-14",
-                    "border-t-[0.5px] border-b-[0.5px]",
-                    "border-[rgba(0,0,0,0.09)] dark:border-[rgba(255,255,255,0.08)]",
-                    "bg-page-light dark:bg-page-dark",
-                  ].join(" ")}
-                >
+                <th className={[headerCell, "w-8 text-left"].join(" ")} />
+                <th className={[headerCell, "text-left"].join(" ")}>Issue</th>
+                <th className={[headerCell, "text-right w-16"].join(" ")}>
                   Posts
                 </th>
-                <th
-                  className={[
-                    "text-left text-[11px] font-medium",
-                    "text-[#8A8984] dark:text-[#6A6A66]",
-                    "px-4 py-1.5 w-36",
-                    "border-t-[0.5px] border-b-[0.5px]",
-                    "border-[rgba(0,0,0,0.09)] dark:border-[rgba(255,255,255,0.08)]",
-                    "bg-page-light dark:bg-page-dark",
-                  ].join(" ")}
-                >
+                <th className={[headerCell, "text-left w-40"].join(" ")}>
                   Severity
                 </th>
-                <th
-                  className={[
-                    "text-right text-[11px] font-medium",
-                    "text-[#8A8984] dark:text-[#6A6A66]",
-                    "px-4 py-1.5 w-[68px]",
-                    "border-t-[0.5px] border-b-[0.5px]",
-                    "border-[rgba(0,0,0,0.09)] dark:border-[rgba(255,255,255,0.08)]",
-                    "bg-page-light dark:bg-page-dark",
-                  ].join(" ")}
-                >
+                <th className={[headerCell, "text-right w-[76px]"].join(" ")}>
                   Sentiment
                 </th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((row, index) => {
-                const match = findMatchingIssue(row, issues);
-                const isClickable = Boolean(match);
-                return (
-                  <tr
-                    key={`${row.category}-${row.subcategory ?? index}`}
-                    onClick={() => handleRowClick(row)}
-                    role={isClickable ? "button" : undefined}
-                    tabIndex={isClickable ? 0 : -1}
-                    onKeyDown={(event) => {
-                      if (!isClickable) {
-                        return;
-                      }
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        handleRowClick(row);
-                      }
-                    }}
-                    aria-label={
-                      isClickable
-                        ? `View posts behind ${
-                            row.subcategory
-                              ? formatSubcategoryLabel(row.subcategory)
-                              : formatCategoryLabel(row.category)
-                          }`
-                        : undefined
+              {filtered.map((row, index) => (
+                <tr
+                  key={`${row.category}-${row.subcategory ?? index}`}
+                  onClick={() => handleRowClick(row)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      handleRowClick(row);
                     }
-                    className={[
-                      "border-b-[0.5px] last:border-b-0",
-                      "border-[rgba(0,0,0,0.05)] dark:border-[rgba(255,255,255,0.04)]",
-                      "hover:bg-hover-light dark:hover:bg-hover-dark",
-                      "transition-colors outline-none",
-                      isClickable
-                        ? "cursor-pointer focus:bg-hover-light dark:focus:bg-hover-dark"
-                        : "cursor-default",
-                    ].join(" ")}
-                  >
-                    <td className="px-4 py-2.5 font-mono tabular text-[12px] text-[#8A8984] dark:text-[#6A6A66]">
-                      {String(row.rank).padStart(2, "0")}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <div className="text-[13px] font-medium">
-                        {row.subcategory
-                          ? formatSubcategoryLabel(row.subcategory)
-                          : formatCategoryLabel(row.category)}
-                      </div>
-                      <div className="mt-0.5">
-                        <span
-                          className={[
-                            "inline-block px-[7px] py-[1px]",
-                            "text-[10px] rounded-[3px]",
-                            "bg-track-light dark:bg-track-dark",
-                            "text-[#52524E] dark:text-[#9C9C98]",
-                          ].join(" ")}
-                        >
-                          {formatCategoryLabel(row.category)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-2.5 text-right font-mono tabular text-[13px] text-[#52524E] dark:text-[#9C9C98]">
-                      {formatNumber(row.postCount)}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <SeverityBar value={row.avgSeverity} />
-                    </td>
-                    <td className="px-4 py-2.5 text-right">
-                      <SentimentPill value={row.avgSentiment} />
-                    </td>
-                  </tr>
-                );
-              })}
+                  }}
+                  aria-label={`View reviews behind ${
+                    row.subcategory
+                      ? formatSubcategoryLabel(row.subcategory)
+                      : formatCategoryLabel(row.category)
+                  }`}
+                  className={[
+                    "border-b border-white/40 last:border-b-0",
+                    "hover:bg-white/40",
+                    "transition-colors outline-none cursor-pointer",
+                    "focus:bg-white/40",
+                  ].join(" ")}
+                >
+                  <td className="px-5 py-3.5 tabular text-[13px] text-muted-light">
+                    {String(row.rank).padStart(2, "0")}
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <div className="text-[15px] font-bold text-ink">
+                      {row.subcategory
+                        ? formatSubcategoryLabel(row.subcategory)
+                        : formatCategoryLabel(row.category)}
+                    </div>
+                    <div className="mt-1">
+                      <span
+                        className={[
+                          "inline-block px-2.5 py-[2px]",
+                          "text-[11px] rounded-full",
+                          "bg-white/70 border border-white/60",
+                          "text-[#5F6893] font-semibold",
+                        ].join(" ")}
+                      >
+                        {formatCategoryLabel(row.category)}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-3.5 text-right tabular text-[13px] text-ink-soft">
+                    {formatNumber(row.postCount)}
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <SeverityBar value={row.avgSeverity} />
+                  </td>
+                  <td className="px-5 py-3.5 text-right">
+                    <SentimentPill value={row.avgSentiment} />
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}
       </Card>
 
-      <IssuePostsModal
-        issueId={selected?.id ?? null}
-        issueTitle={selected?.title ?? ""}
-        category={selected?.category ?? ""}
+      <CategoryPostsModal
+        category={selected?.category ?? null}
         subcategory={selected?.subcategory ?? null}
         onClose={() => setSelected(null)}
       />
